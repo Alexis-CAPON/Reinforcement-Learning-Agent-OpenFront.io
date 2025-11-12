@@ -6,12 +6,12 @@ A sophisticated deep reinforcement learning system for training AI agents to pla
 
 ### Agent Playing on 100×100 Map
 
-![Agent Gameplay](content/agent_gameplay.gif)
+![Agent Gameplay](content/playing_agent.gif)
 _Trained agent playing on australia_100x100_nt map with real-time decision visualization_
 
 ### Training Progress
 
-![Training Curves](content/training_progress.png)
+![Training Curves](content/training_exemple.png)
 _Episode rewards and territory control over 2M training steps with attention-enhanced architecture_
 
 **To create these demos yourself, see the "Recording Demos" section below.**
