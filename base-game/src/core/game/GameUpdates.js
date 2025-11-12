@@ -1,0 +1,34 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RailType = exports.GameUpdateType = void 0;
+var GameUpdateType;
+(function (GameUpdateType) {
+    GameUpdateType[GameUpdateType["Tile"] = 0] = "Tile";
+    GameUpdateType[GameUpdateType["Unit"] = 1] = "Unit";
+    GameUpdateType[GameUpdateType["Player"] = 2] = "Player";
+    GameUpdateType[GameUpdateType["DisplayEvent"] = 3] = "DisplayEvent";
+    GameUpdateType[GameUpdateType["DisplayChatEvent"] = 4] = "DisplayChatEvent";
+    GameUpdateType[GameUpdateType["AllianceRequest"] = 5] = "AllianceRequest";
+    GameUpdateType[GameUpdateType["AllianceRequestReply"] = 6] = "AllianceRequestReply";
+    GameUpdateType[GameUpdateType["BrokeAlliance"] = 7] = "BrokeAlliance";
+    GameUpdateType[GameUpdateType["AllianceExpired"] = 8] = "AllianceExpired";
+    GameUpdateType[GameUpdateType["AllianceExtension"] = 9] = "AllianceExtension";
+    GameUpdateType[GameUpdateType["TargetPlayer"] = 10] = "TargetPlayer";
+    GameUpdateType[GameUpdateType["Emoji"] = 11] = "Emoji";
+    GameUpdateType[GameUpdateType["Win"] = 12] = "Win";
+    GameUpdateType[GameUpdateType["Hash"] = 13] = "Hash";
+    GameUpdateType[GameUpdateType["UnitIncoming"] = 14] = "UnitIncoming";
+    GameUpdateType[GameUpdateType["BonusEvent"] = 15] = "BonusEvent";
+    GameUpdateType[GameUpdateType["RailroadEvent"] = 16] = "RailroadEvent";
+    GameUpdateType[GameUpdateType["ConquestEvent"] = 17] = "ConquestEvent";
+    GameUpdateType[GameUpdateType["EmbargoEvent"] = 18] = "EmbargoEvent";
+})(GameUpdateType || (exports.GameUpdateType = GameUpdateType = {}));
+var RailType;
+(function (RailType) {
+    RailType[RailType["VERTICAL"] = 0] = "VERTICAL";
+    RailType[RailType["HORIZONTAL"] = 1] = "HORIZONTAL";
+    RailType[RailType["TOP_LEFT"] = 2] = "TOP_LEFT";
+    RailType[RailType["TOP_RIGHT"] = 3] = "TOP_RIGHT";
+    RailType[RailType["BOTTOM_LEFT"] = 4] = "BOTTOM_LEFT";
+    RailType[RailType["BOTTOM_RIGHT"] = 5] = "BOTTOM_RIGHT";
+})(RailType || (exports.RailType = RailType = {}));

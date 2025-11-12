@@ -16,7 +16,10 @@ export default async (env, argv) => {
   const isProduction = argv.mode === "production";
 
   return {
-    entry: "./src/client/Main.ts",
+    entry: {
+      main: "./src/client/Main.ts",
+      rl: "./src/client/RLMain.ts",
+    },
     output: {
       publicPath: "/",
       filename: "js/[name].[contenthash].js", // Added content hash
@@ -108,7 +111,23 @@ export default async (env, argv) => {
       new HtmlWebpackPlugin({
         template: "./src/client/index.html",
         filename: "index.html",
+        chunks: ["main"],
         // Add optimization for HTML
+        minify: isProduction
+          ? {
+              collapseWhitespace: true,
+              removeComments: true,
+              removeRedundantAttributes: true,
+              removeScriptTypeAttributes: true,
+              removeStyleLinkTypeAttributes: true,
+              useShortDoctype: true,
+            }
+          : false,
+      }),
+      new HtmlWebpackPlugin({
+        template: "./src/client/rl-index.html",
+        filename: "rl-index.html",
+        chunks: ["rl"],
         minify: isProduction
           ? {
               collapseWhitespace: true,

@@ -1,0 +1,75 @@
+{
+  "project_name": "OpenFrontIO-RL-Phase1",
+  "version": "1.0.3-exploration-bonus",
+  "game": {
+    "map_name": "plains",
+    "map_size": [
+      50,
+      50
+    ],
+    "num_players": 5,
+    "opponent_difficulty": "easy",
+    "max_ticks": 500,
+    "tick_interval_ms": 100
+  },
+  "environment": {
+    "max_steps": 10000,
+    "observation_dim": 5,
+    "action_space_type": "Dict",
+    "action_space": {
+      "attack_target": {
+        "type": "Discrete",
+        "n": 9,
+        "description": "Which neighbor to attack (0=IDLE, 1-8=neighbors)"
+      },
+      "attack_percentage": {
+        "type": "Box",
+        "shape": [
+          1
+        ],
+        "low": 0.0,
+        "high": 1.0,
+        "description": "Percentage of troops to send (0.0-1.0)"
+      }
+    },
+    "observation_features": [
+      "tiles_owned",
+      "troops",
+      "gold",
+      "enemy_tiles",
+      "game_tick"
+    ]
+  },
+  "reward": {
+    "per_tile_change": 10,
+    "per_step": -0.1,
+    "action_bonus": 0.5,
+    "enemy_kill_bonus": 500,
+    "win_bonus": 10000,
+    "loss_penalty": -10000,
+    "timeout_penalty": -5000,
+    "_comment": "Reward system: Tile changes + small action bonus (encourages exploration) + enemy kill bonus + terminal rewards"
+  },
+  "training": {
+    "algorithm": "PPO",
+    "total_timesteps": 300000,
+    "n_steps": 10000,
+    "batch_size": 500,
+    "n_epochs": 10,
+    "learning_rate": 0.0003,
+    "learning_rate_schedule": "constant",
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "ent_coef": 0.05,
+    "vf_coef": 0.5,
+    "max_grad_norm": 0.5,
+    "normalize_observations": false
+  },
+  "logging": {
+    "tensorboard_log": "./logs/tensorboard/",
+    "checkpoint_freq": 10000,
+    "eval_freq": 5000,
+    "eval_episodes": 10
+  }
+}

@@ -34,6 +34,12 @@ export const MapDescription: Record<keyof typeof GameMapType, string> = {
   Italia: "Italia",
   Yenisei: "Yenisei",
   Pluto: "Pluto",
+  Australia_100x100: "Australia 100x100",
+  Australia_100x100_nt: "Australia 100x100 NT",
+  Australia_256x256: "Australia 256x256",
+  Australia_500x500: "Australia 500x500",
+  Australia_500x500_nt: "Australia 500x500 NT",
+  Australia_1024x1024: "Australia 1024x1024",
 };
 
 @customElement("map-display")

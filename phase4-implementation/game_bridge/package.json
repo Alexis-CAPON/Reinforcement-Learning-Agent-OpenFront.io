@@ -1,0 +1,8 @@
+{
+  "name": "phase4-game-bridge",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "tsx": "^4.7.0"
+  }
+}

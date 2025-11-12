@@ -12,7 +12,25 @@ export async function getConfig(
   gameConfig: GameConfig,
   userSettings: UserSettings | null,
   isReplay: boolean = false,
+  skipServerFetch: boolean = false,
 ): Promise<Config> {
+  // For RL mode, skip server fetch and use dev config with defaults
+  if (skipServerFetch) {
+    console.log('[ConfigLoader] Skipping server fetch (RL mode), using default dev config');
+    const defaultSC = {
+      game_env: 'dev',
+      env: () => GameEnv.Dev,
+      turnIntervalMs: () => 100,
+      gameCreationRate: () => 1,
+      lobbyMaxPlayers: () => 50,
+      numWorkers: () => 1,
+      workerIndex: () => 0,
+      workerPath: () => '',
+      allowedFlares: () => undefined,
+    } as unknown as ServerConfig;
+    return new DevConfig(defaultSC, gameConfig, userSettings, isReplay);
+  }
+
   const sc = await getServerConfigFromClient();
   switch (sc.env()) {
     case GameEnv.Dev:

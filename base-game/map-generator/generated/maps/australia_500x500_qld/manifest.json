@@ -1,0 +1,23 @@
+{
+  "name": "australia_500x500_qld",
+  "map": {
+    "width": 500,
+    "height": 500,
+    "num_land_tiles": 0
+  },
+  "mini_map": {
+    "width": 250,
+    "height": 250,
+    "num_land_tiles": 0
+  },
+  "nations": [],
+  "source": {
+    "original_map": "australia",
+    "crop_region": {
+      "x": 1240,
+      "y": 305,
+      "width": 500,
+      "height": 500
+    }
+  }
+}

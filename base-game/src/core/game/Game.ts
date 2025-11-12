@@ -84,6 +84,12 @@ export enum GameMapType {
   Italia = "Italia",
   Yenisei = "Yenisei",
   Pluto = "Pluto",
+  Australia_100x100 = "australia_100x100",
+  Australia_100x100_nt = "australia_100x100_nt",
+  Australia_256x256 = "australia_256x256",
+  Australia_500x500 = "australia_500x500",
+  Australia_500x500_nt = "australia_500x500_nt",
+  Australia_1024x1024 = "australia_1024x1024",
 }
 
 export type GameMapName = keyof typeof GameMapType;

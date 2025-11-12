@@ -1,0 +1,23 @@
+{
+  "name": "australia_100x100",
+  "map": {
+    "width": 100,
+    "height": 100,
+    "num_land_tiles": 0
+  },
+  "mini_map": {
+    "width": 50,
+    "height": 50,
+    "num_land_tiles": 0
+  },
+  "nations": [],
+  "source": {
+    "original_map": "australia",
+    "crop_region": {
+      "x": 870,
+      "y": 865,
+      "width": 100,
+      "height": 100
+    }
+  }
+}

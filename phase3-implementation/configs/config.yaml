@@ -1,0 +1,86 @@
+# OpenFront.io Phase 3 Configuration
+# Battle Royale Training with Curriculum Learning
+
+training:
+  total_timesteps: 900000  # Total across all phases
+  n_envs: 8  # Parallel environments (increase to 16 for M4 Max)
+  device: mps  # cpu, cuda, or mps (use mps for M4 Max GPU acceleration)
+
+# PPO Hyperparameters
+ppo:
+  learning_rate: 3.0e-4
+  n_steps: 1024  # Rollout length per environment
+  batch_size: 128
+  n_epochs: 10  # Optimization epochs per update
+  gamma: 0.995  # Discount factor (long episodes)
+  gae_lambda: 0.95  # GAE parameter
+  clip_range: 0.2  # PPO clip range
+  ent_coef: 0.02  # Entropy coefficient (exploration)
+  vf_coef: 0.5  # Value function loss coefficient
+  max_grad_norm: 0.5  # Gradient clipping
+
+# Curriculum Learning Phases
+curriculum:
+  phase1:
+    name: "Learn Basics"
+    num_bots: 10
+    steps: 100000
+    description: "Learn to expand and survive"
+
+  phase2:
+    name: "Handle Competition"
+    num_bots: 25
+    steps: 300000
+    description: "Survive longer, opportunistic attacks"
+
+  phase3:
+    name: "Full Challenge"
+    num_bots: 50
+    steps: 500000
+    description: "Battle royale with 50 opponents"
+
+# Evaluation
+evaluation:
+  n_episodes: 50  # Episodes for evaluation
+  eval_freq: 50000  # Evaluate every N steps
+  deterministic: true  # Use deterministic actions
+
+# Checkpointing
+checkpoint:
+  save_freq: 50000  # Save checkpoint every N steps
+  keep_n_checkpoints: 5  # Keep last N checkpoints
+
+# Environment Settings
+environment:
+  max_steps: 10000  # Max steps per episode
+  map_size: 512  # Map resolution (downsampled to 128)
+
+# Observation Space
+observation:
+  map_channels: 5  # 128×128×5
+  global_features: 16
+
+# Action Space
+action:
+  directions: 9  # N, NE, E, SE, S, SW, W, NW, WAIT
+  intensities: 5  # 20%, 35%, 50%, 75%, 100%
+  build_options: 2  # No, Yes
+  total_actions: 90  # 9 × 5 × 2
+
+# Reward Function
+reward:
+  territory_change: 1000  # Per % territory change
+  population_optimal_min: 0.40  # Optimal population range
+  population_optimal_max: 0.50
+  population_optimal_bonus: 5
+  population_low_penalty: -10  # < 20%
+  population_high_penalty: -5  # > 80%
+  victory_bonus: 10000
+  defeat_penalty: -10000
+  survival_bonus: 0.5  # Per step alive
+
+# Logging
+logging:
+  tensorboard: true
+  log_interval: 100  # Log every N updates
+  save_logs: true

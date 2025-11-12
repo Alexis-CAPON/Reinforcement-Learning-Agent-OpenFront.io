@@ -1,0 +1,93 @@
+{
+  "project_name": "OpenFrontIO-RL-Phase2",
+  "version": "2.0.0-multiplayer-military-strength",
+  "game": {
+    "map_name": "plains",
+    "map_size": [
+      50,
+      50
+    ],
+    "num_players": 8,
+    "opponent_difficulty": "easy",
+    "max_ticks": 2000,
+    "tick_interval_ms": 100
+  },
+  "environment": {
+    "max_steps": 20000,
+    "observation_space_type": "Dict",
+    "observation_space": {
+      "features": {
+        "type": "Box",
+        "shape": [
+          5
+        ],
+        "description": "Global state: [tiles_owned, troops, gold, enemy_tiles, tick]"
+      },
+      "action_mask": {
+        "type": "Box",
+        "shape": [
+          9
+        ],
+        "description": "Valid actions: IDLE + 8 neighbors"
+      },
+      "neighbor_troops": {
+        "type": "Box",
+        "shape": [
+          8
+        ],
+        "description": "NEW: Troops of each attackable neighbor (normalized 0-1)"
+      }
+    },
+    "action_space_type": "Dict",
+    "action_space": {
+      "attack_target": {
+        "type": "Discrete",
+        "n": 9,
+        "description": "Which neighbor to attack (0=IDLE, 1-8=neighbors)"
+      },
+      "attack_percentage": {
+        "type": "Box",
+        "shape": [
+          1
+        ],
+        "low": 0.0,
+        "high": 1.0,
+        "description": "Percentage of troops to send (0.0-1.0)"
+      }
+    }
+  },
+  "reward": {
+    "per_tile_change": 50,
+    "per_step": -0.05,
+    "action_bonus": 0.5,
+    "enemy_kill_bonus": 8000,
+    "military_strength_bonus": 1.0,
+    "neighbor_strength_bonus": 5.0,
+    "win_bonus": 15000,
+    "loss_penalty": -10000,
+    "timeout_penalty": -7500,
+    "_comment": "Phase 2 (multi-player): Reduced tile reward (50), military strength bonus (1.0 vs all enemies), NEIGHBOR strength bonus (5.0 vs adjacent enemies - MOST IMPORTANT), kill bonus (8000), win bonus (15000)"
+  },
+  "training": {
+    "algorithm": "PPO",
+    "total_timesteps": 500000,
+    "n_steps": 20000,
+    "batch_size": 2000,
+    "n_epochs": 10,
+    "learning_rate": 0.0003,
+    "learning_rate_schedule": "constant",
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "ent_coef": 0.05,
+    "vf_coef": 0.5,
+    "max_grad_norm": 0.5,
+    "normalize_observations": false
+  },
+  "logging": {
+    "tensorboard_log": "./logs/tensorboard/",
+    "checkpoint_freq": 40000,
+    "eval_freq": 20000,
+    "eval_episodes": 5
+  }
+}

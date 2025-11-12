@@ -73,6 +73,12 @@ const numPlayersConfig = {
   [GameMapType.Italia]: [50, 40, 30],
   [GameMapType.Pluto]: [70, 50, 40],
   [GameMapType.Yenisei]: [60, 50, 40],
+  [GameMapType.Australia_100x100]: [20, 15, 10],
+  [GameMapType.Australia_100x100_nt]: [15, 10, 8],
+  [GameMapType.Australia_256x256]: [25, 20, 15],
+  [GameMapType.Australia_500x500]: [30, 20, 15],
+  [GameMapType.Australia_500x500_nt]: [30, 20, 15],
+  [GameMapType.Australia_1024x1024]: [50, 40, 30],
 } as const satisfies Record<GameMapType, [number, number, number]>;
 
 export abstract class DefaultServerConfig implements ServerConfig {

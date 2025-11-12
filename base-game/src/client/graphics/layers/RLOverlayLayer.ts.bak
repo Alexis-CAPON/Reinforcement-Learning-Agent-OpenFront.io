@@ -1,0 +1,185 @@
+/**
+ * RLOverlayLayer - Overlay for visualizing RL model state
+ *
+ * Shows action probabilities, value estimates, and other model internals
+ * on top of the normal game rendering
+ */
+
+import * as PIXI from 'pixi.js';
+import { Layer } from './Layer';
+import { EventBus } from '../../utilities/EventBus';
+
+interface ModelState {
+  tick: number;
+  action: {
+    direction_probs: number[];
+    intensity_probs: number[];
+    build_prob: number;
+    selected_action: number;
+    direction: string;
+    intensity: number;
+    build: boolean;
+  };
+  value_estimate: number;
+  reward: number;
+  cumulative_reward: number;
+}
+
+export class RLOverlayLayer extends Layer {
+  private modelState: ModelState | null = null;
+  private graphics: PIXI.Graphics;
+  private metricsText: PIXI.Text;
+  private enabled = true;
+
+  // Direction names and angles
+  private readonly DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'WAIT'];
+  private readonly ANGLES = [270, 315, 0, 45, 90, 135, 180, 225, 0]; // Degrees
+
+  constructor(eventBus: EventBus) {
+    super();
+
+    this.graphics = new PIXI.Graphics();
+    this.container.addChild(this.graphics);
+
+    // Metrics text overlay
+    this.metricsText = new PIXI.Text('', {
+      fontFamily: 'Arial',
+      fontSize: 14,
+      fill: 0xffffff,
+      stroke: 0x000000,
+      strokeThickness: 3,
+    });
+    this.metricsText.position.set(10, 10);
+    this.container.addChild(this.metricsText);
+
+    // Listen for model state updates
+    eventBus.on('rl-model-state', (state: ModelState) => {
+      this.modelState = state;
+      this.render();
+    });
+
+    // Listen for toggle events
+    eventBus.on('rl-toggle-overlay', (enabled: boolean) => {
+      this.enabled = enabled;
+      this.container.visible = enabled;
+    });
+  }
+
+  private render() {
+    if (!this.modelState || !this.enabled) return;
+
+    this.graphics.clear();
+
+    // Draw action probability arrows
+    this.drawActionArrows();
+
+    // Update metrics text
+    this.updateMetrics();
+  }
+
+  private drawActionArrows() {
+    if (!this.modelState) return;
+
+    const action = this.modelState.action;
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const radius = 100;
+
+    this.DIRECTIONS.forEach((dir, idx) => {
+      if (dir === 'WAIT') return;
+
+      const prob = action.direction_probs[idx];
+      const angle = this.ANGLES[idx] * Math.PI / 180;
+      const isSelected = idx === Math.floor(action.selected_action / 5);
+
+      // Calculate arrow end position
+      const length = radius + prob * 50;
+      const endX = centerX + Math.cos(angle) * length;
+      const endY = centerY + Math.sin(angle) * length;
+
+      // Draw arrow line
+      const color = isSelected ? 0x00ff00 : 0xffffff;
+      const alpha = Math.max(0.3, prob);
+      const width = 2 + prob * 6;
+
+      this.graphics.moveTo(centerX, centerY);
+      this.graphics.lineTo(endX, endY);
+      this.graphics.stroke({ width, color, alpha });
+
+      // Draw arrowhead
+      const arrowSize = 10 + prob * 10;
+      const arrowAngle = Math.PI / 6;
+
+      this.graphics.moveTo(endX, endY);
+      this.graphics.lineTo(
+        endX - arrowSize * Math.cos(angle - arrowAngle),
+        endY - arrowSize * Math.sin(angle - arrowAngle)
+      );
+      this.graphics.stroke({ width, color, alpha });
+
+      this.graphics.moveTo(endX, endY);
+      this.graphics.lineTo(
+        endX - arrowSize * Math.cos(angle + arrowAngle),
+        endY - arrowSize * Math.sin(angle + arrowAngle)
+      );
+      this.graphics.stroke({ width, color, alpha });
+
+      // Draw probability label
+      const textX = centerX + Math.cos(angle) * (length + 25);
+      const textY = centerY + Math.sin(angle) * (length + 25);
+
+      const probText = new PIXI.Text(`${(prob * 100).toFixed(0)}%`, {
+        fontFamily: 'Arial',
+        fontSize: 12,
+        fill: color,
+        stroke: 0x000000,
+        strokeThickness: 2,
+      });
+      probText.anchor.set(0.5);
+      probText.position.set(textX, textY);
+      this.container.addChild(probText);
+    });
+
+    // Draw intensity indicator
+    const intensityText = new PIXI.Text(
+      `Intensity: ${(action.intensity * 100).toFixed(0)}%`,
+      {
+        fontFamily: 'Arial',
+        fontSize: 14,
+        fill: 0xffff00,
+        stroke: 0x000000,
+        strokeThickness: 3,
+      }
+    );
+    intensityText.position.set(centerX - 50, centerY + radius + 40);
+    this.container.addChild(intensityText);
+
+    // Draw build indicator if applicable
+    if (action.build) {
+      const buildText = new PIXI.Text('🏗️ BUILD', {
+        fontFamily: 'Arial',
+        fontSize: 14,
+        fill: 0xff0000,
+        stroke: 0x000000,
+        strokeThickness: 3,
+      });
+      buildText.position.set(centerX - 30, centerY + radius + 60);
+      this.container.addChild(buildText);
+    }
+  }
+
+  private updateMetrics() {
+    if (!this.modelState) return;
+
+    this.metricsText.text = [
+      `Value: ${this.modelState.value_estimate.toFixed(2)}`,
+      `Reward: ${this.modelState.reward.toFixed(2)}`,
+      `Cumulative: ${this.modelState.cumulative_reward.toFixed(2)}`,
+      `Action: ${this.modelState.action.direction} @ ${(this.modelState.action.intensity * 100).toFixed(0)}%`,
+    ].join('\n');
+  }
+
+  draw() {
+    // Rendering happens in render() method called by event
+  }
+}

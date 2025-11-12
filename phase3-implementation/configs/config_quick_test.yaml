@@ -1,0 +1,58 @@
+# Quick Test Configuration - Easier Learning
+# Optimized for fast iteration and initial learning
+
+training:
+  total_timesteps: 50000  # Enough to see learning
+  n_envs: 4
+  device: mps
+
+ppo:
+  learning_rate: 3.0e-4
+  n_steps: 2048  # Longer rollouts for stability
+  batch_size: 256  # Larger batches
+  n_epochs: 10
+  gamma: 0.99  # Slightly lower for shorter-term focus
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.05  # Higher exploration
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+
+# Start with fewer bots for easier learning
+environment:
+  num_bots: 5  # Start easier (5 bots instead of 10)
+  max_steps: 5000  # Shorter episodes
+  map_size: 512
+
+# ADJUSTED REWARD FUNCTION (more balanced)
+reward:
+  # Normalize rewards to [-1, 1] range mostly
+  territory_change: 100  # Down from 1000 (less weight)
+
+  # Population management
+  population_optimal_min: 0.40
+  population_optimal_max: 0.50
+  population_optimal_bonus: 1.0  # Down from 5
+  population_low_penalty: -2.0  # Down from -10
+  population_high_penalty: -1.0  # Down from -5
+
+  # Win/loss (reduced magnitude)
+  victory_bonus: 100  # Down from 10000
+  defeat_penalty: -100  # Down from -10000
+
+  # Survival (increased importance)
+  survival_bonus: 0.1  # Per step alive
+
+# Evaluation
+evaluation:
+  n_episodes: 10
+  eval_freq: 10000
+
+# Checkpointing
+checkpoint:
+  save_freq: 10000
+
+# Logging
+logging:
+  tensorboard: true
+  log_interval: 10

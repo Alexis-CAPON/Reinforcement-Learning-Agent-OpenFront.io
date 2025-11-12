@@ -1,0 +1,13 @@
+# Core RL dependencies
+gymnasium>=0.29.0
+stable-baselines3>=2.2.0
+torch>=2.1.0
+
+# Monitoring and logging
+tensorboard>=2.15.0
+matplotlib>=3.7.0
+numpy>=1.24.0
+
+# Utilities
+tqdm>=4.66.0
+rich>=13.0.0

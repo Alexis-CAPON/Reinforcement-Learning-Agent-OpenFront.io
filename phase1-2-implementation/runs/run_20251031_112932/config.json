@@ -1,0 +1,102 @@
+{
+  "project_name": "OpenFrontIO-RL-Phase2",
+  "version": "2.0.0-multiplayer-military-strength",
+  "game": {
+    "map_name": "plains",
+    "map_size": [
+      50,
+      50
+    ],
+    "num_players": 8,
+    "opponent_difficulty": "easy",
+    "max_ticks": 5000,
+    "tick_interval_ms": 100
+  },
+  "environment": {
+    "max_steps": 50000,
+    "observation_space_type": "Dict",
+    "observation_space": {
+      "features": {
+        "type": "Box",
+        "shape": [
+          12
+        ],
+        "description": "Base[5] + Strategic[5] + Temporal[2]: [tiles_owned, troops, gold, enemy_tiles, tick, troops_per_tile, avg_enemy_troops_per_tile, border_tile_ratio, rank_by_tiles, rank_by_troops, tiles_change_rate, troops_change_rate]"
+      },
+      "action_mask": {
+        "type": "Box",
+        "shape": [
+          9
+        ],
+        "description": "Valid actions: IDLE + 8 neighbors"
+      },
+      "neighbor_info": {
+        "type": "Box",
+        "shape": [
+          8,
+          2
+        ],
+        "description": "Per-neighbor info (8 neighbors x 2 features): [troops_normalized, tiles_normalized]. Aligned with action space (neighbor_info[i] \u2192 action i+1)"
+      },
+      "player_info": {
+        "type": "Box",
+        "shape": [
+          8,
+          3
+        ],
+        "description": "Per-player info matrix (8 players x 3 features): [tiles_normalized, troops_normalized, is_neighbor]. First row is RL agent, rest are alive AI players."
+      }
+    },
+    "action_space_type": "Dict",
+    "action_space": {
+      "attack_target": {
+        "type": "Discrete",
+        "n": 9,
+        "description": "Which neighbor to attack (0=IDLE, 1-8=neighbors)"
+      },
+      "attack_percentage": {
+        "type": "Box",
+        "shape": [
+          1
+        ],
+        "low": 0.0,
+        "high": 1.0,
+        "description": "Percentage of troops to send (0.0-1.0)"
+      }
+    }
+  },
+  "reward": {
+    "per_tile_change": 50,
+    "per_step": -0.05,
+    "action_bonus": 0.5,
+    "enemy_kill_bonus": 8000,
+    "military_strength_bonus": 1.0,
+    "neighbor_strength_bonus": 5.0,
+    "win_bonus": 15000,
+    "loss_penalty": -10000,
+    "timeout_penalty": -7500,
+    "_comment": "Phase 2 (multi-player): Reduced tile reward (50), military strength bonus (1.0 vs all enemies), NEIGHBOR strength bonus (5.0 vs adjacent enemies - MOST IMPORTANT), kill bonus (8000), win bonus (15000)"
+  },
+  "training": {
+    "algorithm": "PPO",
+    "total_timesteps": 1000000,
+    "n_steps": 50000,
+    "batch_size": 5000,
+    "n_epochs": 10,
+    "learning_rate": 0.0003,
+    "learning_rate_schedule": "constant",
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "ent_coef": 0.05,
+    "vf_coef": 0.5,
+    "max_grad_norm": 0.5,
+    "normalize_observations": false
+  },
+  "logging": {
+    "tensorboard_log": "./logs/tensorboard/",
+    "checkpoint_freq": 100000,
+    "eval_freq": 50000,
+    "eval_episodes": 5
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "project_name": "OpenFrontIO-RL-Phase1",
+  "version": "1.0.0",
+  "game": {
+    "map_name": "plains",
+    "map_size": [
+      100,
+      100
+    ],
+    "num_players": 2,
+    "opponent_difficulty": "easy",
+    "max_ticks": 1000,
+    "tick_interval_ms": 100
+  },
+  "environment": {
+    "max_steps": 30000,
+    "observation_dim": 5,
+    "action_dim": 9,
+    "observation_features": [
+      "tiles_owned",
+      "troops",
+      "gold",
+      "enemy_tiles",
+      "game_tick"
+    ],
+    "actions": [
+      "IDLE",
+      "ATTACK_NEIGHBOR_0",
+      "ATTACK_NEIGHBOR_1",
+      "ATTACK_NEIGHBOR_2",
+      "ATTACK_NEIGHBOR_3",
+      "ATTACK_NEIGHBOR_4",
+      "ATTACK_NEIGHBOR_5",
+      "ATTACK_NEIGHBOR_6",
+      "ATTACK_NEIGHBOR_7"
+    ]
+  },
+  "reward": {
+    "per_tile_gained": 10,
+    "per_tile_lost": -10,
+    "per_step": -1,
+    "win_bonus": 10000,
+    "loss_penalty": -10000,
+    "timeout_penalty": -500
+  },
+  "training": {
+    "algorithm": "PPO",
+    "total_timesteps": 200000,
+    "n_steps": 2048,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "learning_rate": 0.0003,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "ent_coef": 0.01,
+    "vf_coef": 0.5,
+    "max_grad_norm": 0.5
+  },
+  "logging": {
+    "tensorboard_log": "./logs/tensorboard/",
+    "checkpoint_freq": 10000,
+    "eval_freq": 5000,
+    "eval_episodes": 10
+  }
+}

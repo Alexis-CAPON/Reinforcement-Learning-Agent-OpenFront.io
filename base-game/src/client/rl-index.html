@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>OpenFront.io - RL Visualizer</title>
+    <link rel="manifest" href="../../resources/manifest.json">
+    <link rel="icon" type="image/x-icon" href="../../resources/images/Favicon.svg">
+    <style>
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: #fff;
+        }
+
+        #loading-screen h1 {
+            color: #0075ff;
+            font-size: 48px;
+            margin-bottom: 20px;
+            font-family: sans-serif;
+        }
+
+        .loading-message {
+            font-size: 18px;
+            color: #aaa;
+            font-family: sans-serif;
+        }
+
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #0075ff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Game container (hidden initially) */
+        #app {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* RL-specific overlay styles */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <h1>OpenFront.io RL Visualizer</h1>
+        <p class="loading-message">Initializing...</p>
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Game Canvas Container (used by createCanvas()) -->
+    <div id="app"></div>
+
+    <!-- RL Overlay (shows model decisions) -->
+    <rl-overlay></rl-overlay>
+
+    <!-- Existing Game UI Elements (from normal game) -->
+    <!-- These are used by ClientGameRunner and GameRenderer -->
+    <div id="customMenu" class="mt-4 sm:mt-6 lg:mt-8">
+      <ul></ul>
+    </div>
+    <div id="radialMenu" class="radial-menu"></div>
+
+    <!-- Game overlays and UI components -->
+    <div class="flex gap-2 fixed right-[10px] top-[10px] z-50 flex-col">
+      <options-menu></options-menu>
+      <player-info-overlay></player-info-overlay>
+    </div>
+
+    <div class="fixed bottom-[30px] sm:bottom-auto sm:top-[20px] z-50 mx-auto max-w-max inset-x-0 items-center">
+      <heads-up-message></heads-up-message>
+    </div>
+
+    <div class="bottom-0 w-full flex-col-reverse sm:flex-row z-50 md:w-[320px]" style="position: fixed; pointer-events: none">
+      <div class="w-full md:w-2/3 md:fixed sm:right-0 md:bottom-0 md:flex flex-col items-end" style="pointer-events: none">
+        <chat-display></chat-display>
+        <events-display></events-display>
+      </div>
+      <div style="pointer-events: auto">
+        <control-panel></control-panel>
+      </div>
+    </div>
+
+    <!-- Game modals -->
+    <emoji-table></emoji-table>
+    <build-menu></build-menu>
+    <win-modal></win-modal>
+    <game-starting-modal></game-starting-modal>
+    <game-top-bar></game-top-bar>
+    <unit-display></unit-display>
+    <div class="flex fixed top-[20px] right-[20px] z-[1000] items-start gap-2">
+      <replay-panel></replay-panel>
+      <game-right-sidebar></game-right-sidebar>
+    </div>
+    <settings-modal></settings-modal>
+    <player-panel></player-panel>
+    <alert-frame></alert-frame>
+    <game-left-sidebar></game-left-sidebar>
+    <fps-display></fps-display>
+
+    <!-- Additional components required by GameRenderer -->
+    <chat-modal></chat-modal>
+    <multi-tab-modal></multi-tab-modal>
+    <lang-selector></lang-selector>
+    <leader-board></leader-board>
+    <team-stats></team-stats>
+    <spawn-ad></spawn-ad>
+    <gutter-ad-modal></gutter-ad-modal>
+
+    <!-- Note: Webpack will inject the bundled RLMain.ts script here -->
+</body>
+</html>

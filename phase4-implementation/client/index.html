@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 4 - OpenFront.io RL Visualizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #ff4136;
+            border-radius: 10px;
+            padding: 15px 20px;
+            color: #fff;
+            z-index: 999;
+        }
+
+        .status-indicator.connected {
+            border-color: #2ecc40;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4136;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected .status-dot {
+            background: #2ecc40;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .metrics-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #ff851b;
+            border-radius: 10px;
+            padding: 15px;
+            color: #fff;
+            font-size: 14px;
+            z-index: 999;
+            min-width: 250px;
+        }
+
+        .metrics-panel h4 {
+            margin: 0 0 10px 0;
+            color: #ff851b;
+            border-bottom: 1px solid #ff851b;
+            padding-bottom: 5px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+
+        .metric-label {
+            color: #aaa;
+        }
+
+        .metric-value {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: #fff;
+        }
+
+        #loading-screen h1 {
+            color: #ff4136;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        #loading-screen p {
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #ff4136;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <h1>OpenFront.io RL Visualizer</h1>
+        <p>Connecting to model...</p>
+        <div class="spinner"></div>
+    </div>
+
+    <div id="game-container" style="display: none;">
+        <div class="status-indicator" id="status-indicator">
+            <span class="status-dot"></span>
+            <span id="status-text">Disconnected</span>
+        </div>
+
+        <div class="metrics-panel" id="metrics-panel">
+            <h4>Live Metrics</h4>
+            <div class="metric-row">
+                <span class="metric-label">Step:</span>
+                <span class="metric-value" id="metric-step">0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Reward:</span>
+                <span class="metric-value" id="metric-reward">0.00</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Cumulative:</span>
+                <span class="metric-value" id="metric-cumulative">0.00</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Value:</span>
+                <span class="metric-value" id="metric-value">0.00</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Action:</span>
+                <span class="metric-value" id="metric-action">-</span>
+            </div>
+        </div>
+
+        <div id="canvas-container"></div>
+    </div>
+
+    <script type="module" src="./Main.ts"></script>
+</body>
+</html>

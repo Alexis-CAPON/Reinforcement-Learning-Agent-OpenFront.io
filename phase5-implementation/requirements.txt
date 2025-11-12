@@ -1,0 +1,36 @@
+# Phase 5 Requirements - Clean Implementation with GPU Support
+
+# Core RL Framework
+gymnasium>=0.29.0
+stable-baselines3>=2.1.0
+
+# PyTorch (install separately with CUDA support)
+# For CUDA 11.7: pip install torch --index-url https://download.pytorch.org/whl/cu117
+# For CUDA 11.8: pip install torch --index-url https://download.pytorch.org/whl/cu118
+# For CPU: pip install torch
+torch>=2.0.0
+
+# Neural Network & ML
+numpy>=1.24.0,<2.0.0
+scipy>=1.10.0  # Required for multi-scale border detection
+
+# Monitoring & Logging
+tensorboard>=2.13.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+
+# Environment & Game Interface
+psutil>=5.9.0
+
+# Jupyter Support (optional, for notebooks)
+jupyter>=1.0.0
+ipykernel>=6.23.0
+ipywidgets>=8.0.0
+
+# Utilities
+tqdm>=4.65.0
+pyyaml>=6.0
+
+# Development (optional)
+pytest>=7.3.0
+black>=23.3.0

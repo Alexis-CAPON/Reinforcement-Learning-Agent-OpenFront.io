@@ -1,0 +1,23 @@
+{
+  "name": "test_nt",
+  "map": {
+    "width": 500,
+    "height": 500,
+    "num_land_tiles": 0
+  },
+  "mini_map": {
+    "width": 250,
+    "height": 250,
+    "num_land_tiles": 0
+  },
+  "nations": [],
+  "source": {
+    "original_map": "australia",
+    "crop_region": {
+      "x": 715,
+      "y": 90,
+      "width": 500,
+      "height": 500
+    }
+  }
+}

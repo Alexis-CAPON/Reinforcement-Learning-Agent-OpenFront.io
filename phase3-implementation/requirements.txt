@@ -1,0 +1,18 @@
+# OpenFront.io Phase 3 - Battle Royale RL Agent
+# Python 3.9+
+
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+gymnasium>=0.29.0
+stable-baselines3>=2.1.0
+numpy>=1.24.0
+
+# Optional but recommended
+tensorboard>=2.13.0  # For training visualization
+pyyaml>=6.0  # For config files
+tqdm>=4.65.0  # Progress bars
+
+# Development
+pytest>=7.4.0  # For testing
+black>=23.3.0  # Code formatting
