@@ -6,13 +6,13 @@ A sophisticated deep reinforcement learning system for training AI agents to pla
 
 ### Agent Playing on 100×100 Map
 
-![Agent Gameplay](docs/agent_gameplay.gif)
-*Trained agent playing on australia_100x100_nt map with real-time decision visualization*
+![Agent Gameplay](content/agent_gameplay.gif)
+_Trained agent playing on australia_100x100_nt map with real-time decision visualization_
 
 ### Training Progress
 
-![Training Curves](docs/training_progress.png)
-*Episode rewards and territory control over 2M training steps with attention-enhanced architecture*
+![Training Curves](content/training_progress.png)
+_Episode rewards and territory control over 2M training steps with attention-enhanced architecture_
 
 **To create these demos yourself, see the "Recording Demos" section below.**
 
@@ -105,6 +105,7 @@ python3 src/train_attention.py --device mps --n-envs 12 --total-timesteps 200000
 ```
 
 **Configuration**:
+
 - Device: `mps` (Apple Silicon), `cuda` (NVIDIA GPU), or `cpu`
 - Parallel environments: 12 (adjust based on your CPU cores)
 - Training steps: 2M (adjust up to 10M+ for better performance)
@@ -114,6 +115,7 @@ python3 src/train_attention.py --device mps --n-envs 12 --total-timesteps 200000
 - Output: Models saved to `runs/run_YYYYMMDD_HHMMSS/checkpoints/`
 
 **Training Options**:
+
 ```bash
 # Full training run (10M steps, harder opponents)
 python3 src/train_attention.py --device mps --n-envs 12 --total-timesteps 10000000 --num-bots 10
@@ -155,6 +157,7 @@ python3 src/visualize_realtime.py \
 ```
 
 **Visualization Options**:
+
 ```bash
 # Use your own trained model
 python3 src/visualize_realtime.py \
@@ -174,6 +177,7 @@ python3 src/visualize_realtime.py \
 ```
 
 The visualization shows:
+
 - Real-time game state
 - Agent's territory (highlighted)
 - Attack directions and intensities
@@ -198,6 +202,7 @@ python tools/crop_map.py \
 ```
 
 **Options**:
+
 ```bash
 # Create a 100×100 map from a specific region
 python tools/crop_map.py \
@@ -219,68 +224,6 @@ python tools/crop_map.py \
 ```
 
 The cropped maps are saved to `base-game/resources/maps/` and can be used immediately for training.
-
-## Recording Demos
-
-### Creating GIFs from Agent Gameplay
-
-1. **Start the visualization**:
-   ```bash
-   cd phase5-implementation
-   python3 src/visualize_realtime.py \
-     --model runs/run_YYYYMMDD_HHMMSS/checkpoints/best_model.zip \
-     --map australia_100x100_nt \
-     --crop none
-   ```
-
-2. **Record the screen**:
-   - **macOS**: Use QuickTime (File → New Screen Recording) or Screenshot.app (Cmd+Shift+5)
-   - **Linux**: Use `peek`, `byzanz`, or `recordmydesktop`
-   - **Windows**: Use Xbox Game Bar (Win+G) or OBS Studio
-
-3. **Convert to GIF**:
-   ```bash
-   # Using ffmpeg (install with: brew install ffmpeg)
-   ffmpeg -i recording.mov \
-     -vf "fps=10,scale=800:-1:flags=lanczos" \
-     -c:v gif \
-     docs/agent_gameplay.gif
-
-   # Optimize GIF size
-   ffmpeg -i recording.mov \
-     -vf "fps=10,scale=600:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
-     -loop 0 \
-     docs/agent_gameplay.gif
-   ```
-
-4. **Place in README**:
-   - Save GIF to `docs/agent_gameplay.gif`
-   - It will automatically appear in the "See It In Action" section
-
-### Capturing Training Progress Screenshots
-
-1. **Start TensorBoard**:
-   ```bash
-   cd phase5-implementation
-   tensorboard --logdir runs/
-   ```
-
-2. **Open browser**: Navigate to http://localhost:6006
-
-3. **Capture interesting metrics**:
-   - Episode reward mean (rollout/ep_rew_mean)
-   - Episode length mean (rollout/ep_len_mean)
-   - Territory percentage over time
-   - Learning rate decay
-
-4. **Take screenshot**:
-   - **macOS**: Cmd+Shift+4, drag to select area
-   - **Linux**: Use `gnome-screenshot` or `scrot`
-   - **Windows**: Win+Shift+S
-
-5. **Save and add to README**:
-   - Save to `docs/training_progress.png`
-   - It will automatically appear in the "See It In Action" section
 
 ## Project Structure
 
