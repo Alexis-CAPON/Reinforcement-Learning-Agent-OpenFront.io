@@ -11,7 +11,7 @@ _Trained agent playing on australia_100x100_nt map with real-time decision visua
 
 ### Training Progress
 
-![Training Curves](content/training_exemple.png)
+![Training Curves](content/training_example.png)
 _Episode rewards and territory control over 2M training steps with attention-enhanced architecture_
 
 **To create these demos yourself, see the "Recording Demos" section below.**
