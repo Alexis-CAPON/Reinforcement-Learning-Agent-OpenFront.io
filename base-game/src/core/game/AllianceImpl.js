@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AllianceImpl = void 0;
-class AllianceImpl {
+export class AllianceImpl {
     constructor(mg, requestor_, recipient_, createdAt_, id_) {
         this.mg = mg;
         this.requestor_ = requestor_;
@@ -59,4 +56,3 @@ class AllianceImpl {
         return this.expiresAt_;
     }
 }
-exports.AllianceImpl = AllianceImpl;

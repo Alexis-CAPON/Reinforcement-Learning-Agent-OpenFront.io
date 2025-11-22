@@ -1,0 +1,76 @@
+2025-11-21 19:16:56,543 - __main__ - WARNING - No GPU available - training will be slow!
+2025-11-21 19:16:56,543 - __main__ - WARNING - Consider using a GPU for training (30-50 hours vs 100-150 hours)
+2025-11-21 19:16:56,543 - __main__ - INFO - ================================================================================
+2025-11-21 19:16:56,543 - __main__ - INFO - FULL GAME TRAINING - Buildings + Nukes + Economy + Military
+2025-11-21 19:16:56,543 - __main__ - INFO - ================================================================================
+2025-11-21 19:16:56,543 - __main__ - INFO - Map: australia_256x256
+2025-11-21 19:16:56,543 - __main__ - INFO - Opponents: 10 bots
+2025-11-21 19:16:56,543 - __main__ - INFO - Parallel envs: 1
+2025-11-21 19:16:56,543 - __main__ - INFO - Total timesteps: 4,096
+2025-11-21 19:16:56,543 - __main__ - INFO - Action space: 5 × 11 × 5 × 7 × 2 × 10 × 10 = 38,500 actions
+2025-11-21 19:16:56,543 - __main__ - INFO - Observation space: 128×128×16 channels + 32 global features
+2025-11-21 19:16:56,543 - __main__ - INFO - Features: Buildings (6 types), Nukes (2 types), Action masking
+2025-11-21 19:16:56,543 - __main__ - INFO - ================================================================================
+2025-11-21 19:16:56,543 - __main__ - INFO - Model directory: models/ppo_full_game_20251121_191656
+2025-11-21 19:16:56,543 - __main__ - INFO - Log directory: logs/ppo_full_game_20251121_191656
+2025-11-21 19:16:56,543 - __main__ - INFO - Creating 1 parallel training environment(s)...
+2025-11-21 19:16:56,544 - game_wrapper - INFO - Starting game bridge: /Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase5-implementation/game_bridge/game_bridge.ts
+2025-11-21 19:16:57,056 - game_wrapper - INFO - Game bridge process started
+2025-11-21 19:16:57,056 - game_wrapper - INFO - GameWrapper initialized: map=australia_256x256, players=11
+2025-11-21 19:16:57,056 - environment_full_game - INFO - Created GameWrapper: map=australia_256x256, bots=10
+2025-11-21 19:16:57,059 - environment_full_game - INFO - Full-game environment initialized: map=australia_256x256, bots=10
+2025-11-21 19:16:57,059 - environment_full_game - INFO - Action space size: 38,500 total actions
+2025-11-21 19:16:57,059 - __main__ - INFO - Creating evaluation environment...
+2025-11-21 19:16:57,059 - game_wrapper - INFO - Starting game bridge: /Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase5-implementation/game_bridge/game_bridge.ts
+2025-11-21 19:16:57,564 - game_wrapper - INFO - Game bridge process started
+2025-11-21 19:16:57,564 - game_wrapper - INFO - GameWrapper initialized: map=australia_256x256, players=11
+2025-11-21 19:16:57,564 - environment_full_game - INFO - Created GameWrapper: map=australia_256x256, bots=10
+2025-11-21 19:16:57,566 - environment_full_game - INFO - Full-game environment initialized: map=australia_256x256, bots=10
+2025-11-21 19:16:57,566 - environment_full_game - INFO - Action space size: 38,500 total actions
+2025-11-21 19:16:57,567 - __main__ - INFO - Creating MaskablePPO model...
+2025-11-21 19:16:57,567 - __main__ - INFO - Hyperparameters:
+2025-11-21 19:16:57,567 - __main__ - INFO -   Learning rate: 0.0003
+2025-11-21 19:16:57,567 - __main__ - INFO -   Batch size: 128
+2025-11-21 19:16:57,567 - __main__ - INFO -   N steps: 2048
+2025-11-21 19:16:57,567 - __main__ - INFO -   N epochs: 10
+2025-11-21 19:16:57,567 - __main__ - INFO -   Gamma: 0.995
+2025-11-21 19:16:57,567 - __main__ - INFO -   GAE lambda: 0.95
+2025-11-21 19:16:57,567 - __main__ - INFO -   Clip range: 0.2
+2025-11-21 19:16:57,567 - __main__ - INFO -   Entropy coef: 0.02
+2025-11-21 19:16:57,567 - __main__ - INFO -   VF coef: 0.5
+2025-11-21 19:16:57,567 - __main__ - INFO -   Max grad norm: 0.5
+2025-11-21 19:17:16,940 - __main__ - INFO - Model device: mps
+2025-11-21 19:17:16,940 - __main__ - INFO - ================================================================================
+2025-11-21 19:17:16,940 - __main__ - INFO - Starting training...
+2025-11-21 19:17:16,940 - __main__ - INFO - Estimated time: 30-50 hours on GPU, 100-150 hours on CPU
+2025-11-21 19:17:16,940 - __main__ - INFO - Monitor with: tensorboard --logdir logs/ppo_full_game_20251121_191656
+2025-11-21 19:17:16,940 - __main__ - INFO - ================================================================================
+2025-11-21 19:17:16,940 - game_wrapper - INFO - Starting new game: 11 players
+2025-11-21 19:17:16,971 - game_wrapper - INFO - Game started at tick 0
+Using mps device
+Logging to logs/ppo_full_game_20251121_191656/PPO_1
+-----------------------------
+| time/              |      |
+|    fps             | 34   |
+|    iterations      | 1    |
+|    time_elapsed    | 58   |
+|    total_timesteps | 2048 |
+-----------------------------
+-------------------------------------------
+| time/                   |               |
+|    fps                  | 22            |
+|    iterations           | 2             |
+|    time_elapsed         | 181           |
+|    total_timesteps      | 4096          |
+| train/                  |               |
+|    approx_kl            | 1.5835976e-06 |
+|    clip_fraction        | 0             |
+|    clip_range           | 0.2           |
+|    entropy_loss         | -4.62         |
+|    explained_variance   | 7.75e-06      |
+|    learning_rate        | 0.0003        |
+|    loss                 | 9.08e+04      |
+|    n_updates            | 10            |
+|    policy_gradient_loss | -0.000189     |
+|    value_loss           | 2.45e+06      |
+-------------------------------------------

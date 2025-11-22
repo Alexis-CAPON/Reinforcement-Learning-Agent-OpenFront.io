@@ -86,17 +86,21 @@ class OpenFrontEnvFullGame(gym.Env):
         # Frame stacking for temporal context
         self.frame_buffer = deque(maxlen=frame_stack)
 
-        # Observation space with expanded global features
+        # Observation space with expanded spatial features for buildings/nukes
+        # Increased from 5 to 16 spatial channels to show building locations
         self.observation_space = spaces.Dict({
-            'map': spaces.Box(0, 1, (128, 128, 5 * frame_stack), dtype=np.float32),
-            'global': spaces.Box(-np.inf, np.inf, (32 * frame_stack,), dtype=np.float32),  # Expanded to 32
+            'map': spaces.Box(0, 1, (128, 128, 16 * frame_stack), dtype=np.float32),  # Expanded to 16 channels
+            'global': spaces.Box(-np.inf, np.inf, (32 * frame_stack,), dtype=np.float32),  # 32 global features
             'clusters': spaces.Box(0, 1, (5, 6), dtype=np.float32)
         })
 
-        # Action space: [cluster, action_type, intensity, building, nuke, tile_x, tile_y]
-        self.action_space = spaces.MultiDiscrete([5, 11, 5, 7, 2, 10, 10])
+        # Action space: Discrete space for all combinations of [cluster, action_type, intensity, building, nuke, tile]
+        # Total: 5 × 11 × 5 × 7 × 2 × 10 = 38,500 actions
+        # tile represents 10 possible tile positions within cluster (encoded as single index)
+        self.action_space = spaces.Discrete(38500)
 
         # Action components
+        self.action_dims = (5, 11, 5, 7, 2, 10)  # Dimensions for decoding flat actions
         self.directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'WAIT']
         self.intensities = [0.15, 0.30, 0.45, 0.60, 0.75]
         self.building_types = ['None', 'City', 'Port', 'Missile Silo', 'SAM Launcher', 'Defense Post', 'Factory']
@@ -109,13 +113,13 @@ class OpenFrontEnvFullGame(gym.Env):
         self.current_clusters = []
 
         logger.info(f"Full-game environment initialized: map={map_name}, bots={num_bots}")
-        logger.info(f"Action space size: {np.prod(self.action_space.nvec):,} total actions")
+        logger.info(f"Action space size: {self.action_space.n:,} total actions")
 
     def action_masks(self) -> np.ndarray:
         """
         Generate action mask for current state.
 
-        Returns mask of shape (5, 11, 5, 7, 2, 10, 10) where True = valid, False = invalid
+        Returns mask of shape (5, 11, 5, 7, 2, 10) where True = valid, False = invalid
 
         Masking strategy:
         - Non-existent clusters: masked entirely
@@ -124,12 +128,12 @@ class OpenFrontEnvFullGame(gym.Env):
         - Nuke actions (10): mask intensity/building params, check availability
         """
         # Start with all actions masked (invalid)
-        mask = np.zeros((5, 11, 5, 7, 2, 10, 10), dtype=bool)
+        mask = np.zeros((5, 11, 5, 7, 2, 10), dtype=bool)
 
         if self.game is None:
             # Stub mode: allow all attacks
-            mask[:, :9, :, 0, 0, 0, 0] = True
-            return mask
+            mask[:, :9, :, 0, 0, :] = True
+            return mask.flatten()
 
         state = self.game.get_state()
         num_clusters = len(self.current_clusters)
@@ -139,50 +143,44 @@ class OpenFrontEnvFullGame(gym.Env):
             # Attack actions (0-8): enable all directions/intensities
             for direction in range(9):
                 for intensity in range(5):
-                    # Mask out building_type[0], nuke_type[0], tile[0,0]
-                    mask[cluster_id, direction, intensity, 0, 0, 0, 0] = True
+                    # Mask out building_type[0], nuke_type[0], tile[0]
+                    mask[cluster_id, direction, intensity, 0, 0, 0] = True
 
             # Build actions (9): enable if we have gold
-            if state.get('can_build_city', False):
-                for tile_x in range(10):
-                    for tile_y in range(10):
-                        mask[cluster_id, 9, 0, 1, 0, tile_x, tile_y] = True  # City
+            if state.can_build_city:
+                for tile in range(10):
+                    mask[cluster_id, 9, 0, 1, 0, tile] = True  # City
 
-            if state.get('can_build_port', False):
-                for tile_x in range(10):
-                    for tile_y in range(10):
-                        mask[cluster_id, 9, 0, 2, 0, tile_x, tile_y] = True  # Port
+            if state.can_build_port:
+                for tile in range(10):
+                    mask[cluster_id, 9, 0, 2, 0, tile] = True  # Port
 
-            if state.get('can_build_silo', False):
-                for tile_x in range(10):
-                    for tile_y in range(10):
-                        mask[cluster_id, 9, 0, 3, 0, tile_x, tile_y] = True  # Silo
+            if state.can_build_silo:
+                for tile in range(10):
+                    mask[cluster_id, 9, 0, 3, 0, tile] = True  # Silo
 
-            if state.get('can_build_sam', False):
-                for tile_x in range(10):
-                    for tile_y in range(10):
-                        mask[cluster_id, 9, 0, 4, 0, tile_x, tile_y] = True  # SAM
+            if state.can_build_sam:
+                for tile in range(10):
+                    mask[cluster_id, 9, 0, 4, 0, tile] = True  # SAM
 
             # Defense Post and Factory (assuming same cost as SAM for now)
-            if state.get('can_build_sam', False):
-                for tile_x in range(10):
-                    for tile_y in range(10):
-                        mask[cluster_id, 9, 0, 5, 0, tile_x, tile_y] = True  # Defense
-                        mask[cluster_id, 9, 0, 6, 0, tile_x, tile_y] = True  # Factory
+            if state.can_build_sam:
+                for tile in range(10):
+                    mask[cluster_id, 9, 0, 5, 0, tile] = True  # Defense
+                    mask[cluster_id, 9, 0, 6, 0, tile] = True  # Factory
 
             # Nuke actions (10): enable if we have nukes and silos
-            if state.get('can_launch_nuke', False):
-                atom_bombs = state.get('atom_bombs_available', 0)
-                hydrogen_bombs = state.get('hydrogen_bombs_available', 0)
+            if state.can_launch_nuke:
+                atom_bombs = state.atom_bombs_available
+                hydrogen_bombs = state.hydrogen_bombs_available
 
-                for tile_x in range(10):
-                    for tile_y in range(10):
-                        if atom_bombs > 0:
-                            mask[cluster_id, 10, 0, 0, 0, tile_x, tile_y] = True  # Atom
-                        if hydrogen_bombs > 0:
-                            mask[cluster_id, 10, 0, 0, 1, tile_x, tile_y] = True  # Hydrogen
+                for tile in range(10):
+                    if atom_bombs > 0:
+                        mask[cluster_id, 10, 0, 0, 0, tile] = True  # Atom
+                    if hydrogen_bombs > 0:
+                        mask[cluster_id, 10, 0, 0, 1, tile] = True  # Hydrogen
 
-        return mask
+        return mask.flatten()
 
     def reset(
         self,
@@ -229,14 +227,19 @@ class OpenFrontEnvFullGame(gym.Env):
             # Stub mode
             return self._stub_step(action)
 
-        cluster_id, action_type, intensity_idx, building_idx, nuke_idx, tile_x, tile_y = action
+        # Decode flat action into components
+        action = int(action)
+        cluster_id, action_type, intensity_idx, building_idx, nuke_idx, tile = np.unravel_index(
+            action, self.action_dims
+        )
+
+        # Convert numpy int64 to Python int for JSON serialization
         cluster_id = int(cluster_id)
         action_type = int(action_type)
         intensity_idx = int(intensity_idx)
         building_idx = int(building_idx)
         nuke_idx = int(nuke_idx)
-        tile_x = int(tile_x)
-        tile_y = int(tile_y)
+        tile = int(tile)
 
         # Validate cluster_id
         if cluster_id >= len(self.current_clusters):
@@ -253,20 +256,24 @@ class OpenFrontEnvFullGame(gym.Env):
             # Build action
             if building_idx > 0:
                 building_type = self.building_types[building_idx]
-                # Convert discrete tile positions to normalized coordinates
-                normalized_x = tile_x / 9.0
-                normalized_y = tile_y / 9.0
+                # Convert tile index (0-9) to 2×5 grid, then to normalized coordinates
+                tile_x = tile % 2  # 0 or 1
+                tile_y = tile // 2  # 0-4
+                normalized_x = tile_x / 1.0  # 0.0 or 1.0
+                normalized_y = tile_y / 4.0  # 0.0, 0.25, 0.5, 0.75, 1.0
                 action_success = self._execute_build_action(building_type, normalized_x, normalized_y)
         elif action_type == 10:
             # Nuke action
             nuke_type = self.nuke_types[nuke_idx]
-            # Convert discrete tile positions to normalized coordinates
-            normalized_x = tile_x / 9.0
-            normalized_y = tile_y / 9.0
+            # Convert tile index (0-9) to 2×5 grid, then to normalized coordinates
+            tile_x = tile % 2  # 0 or 1
+            tile_y = tile // 2  # 0-4
+            normalized_x = tile_x / 1.0  # 0.0 or 1.0
+            normalized_y = tile_y / 4.0  # 0.0, 0.25, 0.5, 0.75, 1.0
             action_success = self._execute_nuke_action(nuke_type, normalized_x, normalized_y)
 
-        # Tick game
-        self.game.tick()
+        # Update game state
+        self.game.update()
         self.step_count += 1
 
         # Get new observation
@@ -303,13 +310,23 @@ class OpenFrontEnvFullGame(gym.Env):
     def _execute_build_action(self, building_type: str, tile_x: float, tile_y: float) -> bool:
         """Execute building construction."""
         if self.game is not None:
-            return self.game.build_unit(unit_type=building_type, tile_x=tile_x, tile_y=tile_y)
+            try:
+                return self.game.build_unit(unit_type=building_type, tile_x=tile_x, tile_y=tile_y)
+            except RuntimeError as e:
+                # Building failed (likely not enough gold or invalid location)
+                logger.debug(f"Build action failed: {e}")
+                return False
         return False
 
     def _execute_nuke_action(self, nuke_type: str, tile_x: float, tile_y: float) -> bool:
         """Execute nuke launch."""
         if self.game is not None:
-            return self.game.launch_nuke(nuke_type=nuke_type, tile_x=tile_x, tile_y=tile_y)
+            try:
+                return self.game.launch_nuke(nuke_type=nuke_type, tile_x=tile_x, tile_y=tile_y)
+            except RuntimeError as e:
+                # Nuke launch failed (likely no nukes available or invalid location)
+                logger.debug(f"Nuke action failed: {e}")
+                return False
         return False
 
     def _get_observation(self) -> Dict[str, np.ndarray]:
@@ -317,7 +334,7 @@ class OpenFrontEnvFullGame(gym.Env):
         if self.game is None:
             # Stub observation
             return {
-                'map': np.zeros((128, 128, 5), dtype=np.float32),
+                'map': np.zeros((128, 128, 16), dtype=np.float32),  # Updated to 16 channels
                 'global': np.zeros(32, dtype=np.float32),
                 'clusters': np.zeros((5, 6), dtype=np.float32)
             }
@@ -340,7 +357,27 @@ class OpenFrontEnvFullGame(gym.Env):
         }
 
     def _extract_map_features(self, state) -> np.ndarray:
-        """Extract 128×128 spatial features (5 channels)."""
+        """
+        Extract 128×128 spatial features (16 channels).
+
+        Channels:
+        0: Our territory
+        1: Enemy territory
+        2: Neutral territory
+        3: Border tiles
+        4: Troop density
+        5: Our cities
+        6: Our ports
+        7: Our missile silos
+        8: Our SAM launchers
+        9: Our defense posts
+        10: Our factories
+        11: Enemy buildings (all types)
+        12: Valid building locations (our territory, not occupied)
+        13: High-value targets (enemy clusters)
+        14: Defensive coverage (SAM range)
+        15: Strategic importance (chokepoints, borders)
+        """
         # Get map dimensions
         territory_map = np.array(state.territory_map, dtype=np.float32)
         h, w = territory_map.shape
@@ -359,25 +396,98 @@ class OpenFrontEnvFullGame(gym.Env):
             padded[:territory_map.shape[0], :territory_map.shape[1]] = territory_map
             territory_map = padded
 
-        # Create 5 channels
-        channels = np.zeros((target_size, target_size, 5), dtype=np.float32)
+        # Create 16 channels
+        channels = np.zeros((target_size, target_size, 16), dtype=np.float32)
 
         # Channel 0: Our territory
-        channels[:, :, 0] = (territory_map == 1).astype(np.float32)
+        our_territory = (territory_map == 1).astype(np.float32)
+        channels[:, :, 0] = our_territory
 
         # Channel 1: Enemy territory
-        channels[:, :, 1] = (territory_map >= 2).astype(np.float32)
+        enemy_territory = (territory_map >= 2).astype(np.float32)
+        channels[:, :, 1] = enemy_territory
 
         # Channel 2: Neutral territory
         channels[:, :, 2] = (territory_map == 0).astype(np.float32)
 
-        # Channel 3: Border tiles (simplified)
-        from scipy.ndimage import sobel
+        # Channel 3: Border tiles
+        from scipy.ndimage import sobel, binary_dilation
         border = np.abs(sobel(territory_map, axis=0)) + np.abs(sobel(territory_map, axis=1))
         channels[:, :, 3] = np.clip(border, 0, 1)
 
-        # Channel 4: Troop density (simplified)
-        channels[:, :, 4] = channels[:, :, 0] * 0.5
+        # Channel 4: Troop density (simplified - would need actual troop data)
+        channels[:, :, 4] = our_territory * 0.5
+
+        # Channels 5-10: Our buildings (EXACT positions)
+        # Plot each building at its actual location
+        scale_x = target_size / w if w > 0 else 1
+        scale_y = target_size / h if h > 0 else 1
+
+        # Channel 5: Our cities
+        for pos in state.our_cities_positions:
+            x_scaled = int(pos['x'] * scale_x)
+            y_scaled = int(pos['y'] * scale_y)
+            if 0 <= x_scaled < target_size and 0 <= y_scaled < target_size:
+                channels[y_scaled, x_scaled, 5] = 1.0
+
+        # Channel 6: Our ports
+        for pos in state.our_ports_positions:
+            x_scaled = int(pos['x'] * scale_x)
+            y_scaled = int(pos['y'] * scale_y)
+            if 0 <= x_scaled < target_size and 0 <= y_scaled < target_size:
+                channels[y_scaled, x_scaled, 6] = 1.0
+
+        # Channel 7: Our missile silos
+        for pos in state.our_silos_positions:
+            x_scaled = int(pos['x'] * scale_x)
+            y_scaled = int(pos['y'] * scale_y)
+            if 0 <= x_scaled < target_size and 0 <= y_scaled < target_size:
+                channels[y_scaled, x_scaled, 7] = 1.0
+
+        # Channel 8: Our SAM launchers
+        for pos in state.our_sam_positions:
+            x_scaled = int(pos['x'] * scale_x)
+            y_scaled = int(pos['y'] * scale_y)
+            if 0 <= x_scaled < target_size and 0 <= y_scaled < target_size:
+                channels[y_scaled, x_scaled, 8] = 1.0
+
+        # Channel 9: Our defense posts
+        for pos in state.our_defense_positions:
+            x_scaled = int(pos['x'] * scale_x)
+            y_scaled = int(pos['y'] * scale_y)
+            if 0 <= x_scaled < target_size and 0 <= y_scaled < target_size:
+                channels[y_scaled, x_scaled, 9] = 1.0
+
+        # Channel 10: Our factories
+        for pos in state.our_factories_positions:
+            x_scaled = int(pos['x'] * scale_x)
+            y_scaled = int(pos['y'] * scale_y)
+            if 0 <= x_scaled < target_size and 0 <= y_scaled < target_size:
+                channels[y_scaled, x_scaled, 10] = 1.0
+
+        # Channel 11: Enemy buildings (EXACT positions)
+        for pos in state.enemy_buildings_positions:
+            x_scaled = int(pos['x'] * scale_x)
+            y_scaled = int(pos['y'] * scale_y)
+            if 0 <= x_scaled < target_size and 0 <= y_scaled < target_size:
+                channels[y_scaled, x_scaled, 11] = 1.0
+
+        # Channel 12: Valid building locations (our territory)
+        channels[:, :, 12] = our_territory
+
+        # Channel 13: High-value targets (enemy territory near borders)
+        enemy_near_border = enemy_territory * channels[:, :, 3]
+        channels[:, :, 13] = enemy_near_border
+
+        # Channel 14: Defensive coverage (SAM range - dilated SAM positions)
+        if state.sam_launchers_count > 0:
+            sam_coverage = binary_dilation(channels[:, :, 8] > 0, iterations=3).astype(np.float32)
+            channels[:, :, 14] = sam_coverage
+
+        # Channel 15: Strategic importance (border regions + chokepoints)
+        # Dilate borders to show strategically important areas
+        strategic = binary_dilation(channels[:, :, 3] > 0, iterations=2).astype(np.float32)
+        channels[:, :, 15] = strategic * our_territory
 
         return channels
 
@@ -401,7 +511,7 @@ class OpenFrontEnvFullGame(gym.Env):
         features[8] = state.rank / max(state.total_players, 1)
         features[9] = state.alive_players / max(state.total_players, 1)
         features[10] = state.time_alive / 10000.0
-        features[11] = state.nearest_threat_distance / 500.0
+        features[11] = state.nearest_threat / 500.0
 
         # Economic features (12-19)
         features[12] = np.log1p(state.gold) / 10.0  # Log-scaled gold
@@ -417,7 +527,7 @@ class OpenFrontEnvFullGame(gym.Env):
         features[20] = state.atom_bombs_available / 5.0
         features[21] = state.hydrogen_bombs_available / 3.0
         features[22] = float(state.can_launch_nuke)
-        features[23] = (state.silos_count > 0).astype(np.float32)
+        features[23] = float(state.silos_count > 0)
 
         # Building capabilities (24-27)
         features[24] = float(state.can_build_city)
@@ -553,7 +663,7 @@ class OpenFrontEnvFullGame(gym.Env):
     def _stub_step(self, action):
         """Stub step for testing without game."""
         obs = {
-            'map': np.random.rand(128, 128, 5 * self.frame_stack).astype(np.float32),
+            'map': np.random.rand(128, 128, 16 * self.frame_stack).astype(np.float32),  # Updated to 16 channels
             'global': np.random.rand(32 * self.frame_stack).astype(np.float32),
             'clusters': np.random.rand(5, 6).astype(np.float32)
         }

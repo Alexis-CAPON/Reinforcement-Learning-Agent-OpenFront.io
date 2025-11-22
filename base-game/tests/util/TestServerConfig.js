@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TestServerConfig = void 0;
-class TestServerConfig {
+export class TestServerConfig {
     allowedFlares() {
         throw new Error("Method not implemented.");
     }
@@ -93,4 +90,3 @@ class TestServerConfig {
         throw new Error("Method not implemented.");
     }
 }
-exports.TestServerConfig = TestServerConfig;

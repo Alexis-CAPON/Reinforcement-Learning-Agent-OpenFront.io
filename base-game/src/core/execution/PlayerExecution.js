@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlayerExecution = void 0;
-const Game_1 = require("../game/Game");
-const Util_1 = require("../Util");
-class PlayerExecution {
+import { UnitType } from "../game/Game";
+import { calculateBoundingBox, getMode, inscribed, simpleHash } from "../Util";
+export class PlayerExecution {
     constructor(player) {
         this.player = player;
         this.ticksPerClusterCalc = 20;
@@ -17,7 +14,7 @@ class PlayerExecution {
         this.mg = mg;
         this.config = mg.config();
         this.lastCalc =
-            ticks + ((0, Util_1.simpleHash)(this.player.name()) % this.ticksPerClusterCalc);
+            ticks + (simpleHash(this.player.name()) % this.ticksPerClusterCalc);
     }
     tick(ticks) {
         this.player.decayRelations();
@@ -39,10 +36,10 @@ class PlayerExecution {
             const gold = this.player.gold();
             this.player.removeGold(gold);
             this.player.units().forEach((u) => {
-                if (u.type() !== Game_1.UnitType.AtomBomb &&
-                    u.type() !== Game_1.UnitType.HydrogenBomb &&
-                    u.type() !== Game_1.UnitType.MIRVWarhead &&
-                    u.type() !== Game_1.UnitType.MIRV) {
+                if (u.type() !== UnitType.AtomBomb &&
+                    u.type() !== UnitType.HydrogenBomb &&
+                    u.type() !== UnitType.MIRVWarhead &&
+                    u.type() !== UnitType.MIRV) {
                     u.delete();
                 }
             });
@@ -87,7 +84,7 @@ class PlayerExecution {
         const main = clusters.shift();
         if (main === undefined)
             throw new Error("No clusters");
-        this.player.largestClusterBoundingBox = (0, Util_1.calculateBoundingBox)(this.mg, main);
+        this.player.largestClusterBoundingBox = calculateBoundingBox(this.mg, main);
         const surroundedBy = this.surroundedBySamePlayer(main);
         if (surroundedBy && !this.player.isFriendly(surroundedBy)) {
             this.removeCluster(main);
@@ -107,12 +104,12 @@ class PlayerExecution {
             }
             if (isOceanShore ||
                 this.mg.isOnEdgeOfMap(tile) ||
-                this.mg.neighbors(tile).some((n) => { var _a; return !((_a = this.mg) === null || _a === void 0 ? void 0 : _a.hasOwner(n)); })) {
+                this.mg.neighbors(tile).some((n) => !this.mg?.hasOwner(n))) {
                 return false;
             }
             this.mg
                 .neighbors(tile)
-                .filter((n) => { var _a, _b; return ((_a = this.mg) === null || _a === void 0 ? void 0 : _a.ownerID(n)) !== ((_b = this.player) === null || _b === void 0 ? void 0 : _b.smallID()); })
+                .filter((n) => this.mg?.ownerID(n) !== this.player?.smallID())
                 .forEach((p) => this.mg && enemies.add(this.mg.ownerID(p)));
             if (enemies.size !== 1) {
                 return false;
@@ -122,9 +119,9 @@ class PlayerExecution {
             return false;
         }
         const enemy = this.mg.playerBySmallID(Array.from(enemies)[0]);
-        const enemyBox = (0, Util_1.calculateBoundingBox)(this.mg, enemy.borderTiles());
-        const clusterBox = (0, Util_1.calculateBoundingBox)(this.mg, cluster);
-        if ((0, Util_1.inscribed)(enemyBox, clusterBox)) {
+        const enemyBox = calculateBoundingBox(this.mg, enemy.borderTiles());
+        const clusterBox = calculateBoundingBox(this.mg, cluster);
+        if (inscribed(enemyBox, clusterBox)) {
             return enemy;
         }
         return false;
@@ -137,22 +134,19 @@ class PlayerExecution {
             }
             this.mg
                 .neighbors(tr)
-                .filter((n) => {
-                var _a, _b, _c;
-                return ((_a = this.mg) === null || _a === void 0 ? void 0 : _a.owner(n).isPlayer()) &&
-                    ((_b = this.mg) === null || _b === void 0 ? void 0 : _b.ownerID(n)) !== ((_c = this.player) === null || _c === void 0 ? void 0 : _c.smallID());
-            })
+                .filter((n) => this.mg?.owner(n).isPlayer() &&
+                this.mg?.ownerID(n) !== this.player?.smallID())
                 .forEach((n) => enemyTiles.add(n));
         }
         if (enemyTiles.size === 0) {
             return false;
         }
-        const enemyBox = (0, Util_1.calculateBoundingBox)(this.mg, enemyTiles);
-        const clusterBox = (0, Util_1.calculateBoundingBox)(this.mg, cluster);
-        return (0, Util_1.inscribed)(enemyBox, clusterBox);
+        const enemyBox = calculateBoundingBox(this.mg, enemyTiles);
+        const clusterBox = calculateBoundingBox(this.mg, cluster);
+        return inscribed(enemyBox, clusterBox);
     }
     removeCluster(cluster) {
-        if (Array.from(cluster).some((t) => { var _a, _b; return ((_a = this.mg) === null || _a === void 0 ? void 0 : _a.ownerID(t)) !== ((_b = this.player) === null || _b === void 0 ? void 0 : _b.smallID()); })) {
+        if (Array.from(cluster).some((t) => this.mg?.ownerID(t) !== this.player?.smallID())) {
             // Other removeCluster operations could change tile owners,
             // so double check.
             return;
@@ -165,7 +159,7 @@ class PlayerExecution {
         if (!firstTile) {
             return;
         }
-        const filter = (_, t) => { var _a, _b; return ((_a = this.mg) === null || _a === void 0 ? void 0 : _a.ownerID(t)) === ((_b = this.player) === null || _b === void 0 ? void 0 : _b.smallID()); };
+        const filter = (_, t) => this.mg?.ownerID(t) === this.player?.smallID();
         const tiles = this.mg.bfs(firstTile, filter);
         if (this.player.numTilesOwned() === tiles.size) {
             this.mg.conquerPlayer(capturing, this.player);
@@ -203,7 +197,7 @@ class PlayerExecution {
             return largestNeighborAttack;
         }
         // fall back to getting mode if no attacks
-        const mode = (0, Util_1.getMode)(neighborsIDs);
+        const mode = getMode(neighborsIDs);
         if (!this.mg.playerBySmallID(mode).isPlayer()) {
             return null;
         }
@@ -251,4 +245,3 @@ class PlayerExecution {
         return this.active;
     }
 }
-exports.PlayerExecution = PlayerExecution;

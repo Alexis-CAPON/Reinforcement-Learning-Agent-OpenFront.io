@@ -10,11 +10,13 @@
  */
 
 import * as readline from 'readline';
-import { PlayerType, Player, Game, PlayerInfo } from '../../base-game/src/core/game/Game';
+import { PlayerType, Player, Game, PlayerInfo, GameMapType, GameMode, GameType, Difficulty } from '../../base-game/src/core/game/Game';
 import { createGame } from '../../base-game/src/core/game/GameImpl';
 import { genTerrainFromBin, MapManifest } from '../../base-game/src/core/game/TerrainMapLoader';
 import { UserSettings } from '../../base-game/src/core/game/UserSettings';
+import { GameConfig } from '../../base-game/src/core/Schemas';
 import { TestConfig } from '../../base-game/tests/util/TestConfig';
+import { TestServerConfig } from '../../base-game/tests/util/TestServerConfig';
 import { AttackExecution } from '../../base-game/src/core/execution/AttackExecution';
 import { SpawnExecution } from '../../base-game/src/core/execution/SpawnExecution';
 import * as path from 'path';
@@ -89,6 +91,15 @@ interface GameState {
   can_build_silo: boolean;
   can_build_sam: boolean;
   can_launch_nuke: boolean;
+
+  // NEW: Unit positions for spatial observations
+  our_cities_positions: Array<{x: number, y: number}>;
+  our_ports_positions: Array<{x: number, y: number}>;
+  our_silos_positions: Array<{x: number, y: number}>;
+  our_sam_positions: Array<{x: number, y: number}>;
+  our_defense_positions: Array<{x: number, y: number}>;
+  our_factories_positions: Array<{x: number, y: number}>;
+  enemy_buildings_positions: Array<{x: number, y: number}>;
 }
 
 interface Command {
@@ -136,55 +147,74 @@ class GameBridge {
     try {
       // Create player list: 1 RL agent + (numPlayers-1) AI bots
       const players: PlayerInfo[] = [
-        { name: 'RL_Agent', type: PlayerType.Human }
+        new PlayerInfo('RL_Agent', PlayerType.Human, null, 'RL_Agent')
       ];
 
       // Add AI bots
       for (let i = 1; i < numPlayers; i++) {
-        players.push({
-          name: `AI_Bot_${i}`,
-          type: PlayerType.Bot,
-          difficulty: 'Easy' as any
-        });
+        players.push(
+          new PlayerInfo(`AI_Bot_${i}`, PlayerType.Bot, null, `AI_Bot_${i}`)
+        );
       }
 
       // Load map
       const mapDir = path.join(__dirname, '../../base-game/resources/maps', mapName);
-      const manifestPath = path.join(mapDir, 'map_manifest.json');
+      const manifestPath = path.join(mapDir, 'manifest.json');
 
       if (!fs.existsSync(manifestPath)) {
-        throw new Error(`Map not found: ${mapName}`);
+        throw new Error(`Map not found: ${mapName} at ${manifestPath}`);
       }
 
       const manifest: MapManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-      this.mapWidth = manifest.width;
-      this.mapHeight = manifest.height;
+      this.mapWidth = manifest.map.width;
+      this.mapHeight = manifest.map.height;
 
-      const terrainData = genTerrainFromBin(mapDir);
+      // Load binary map data (both main map and mini map)
+      const mapBinPath = path.join(mapDir, 'map.bin');
+      const miniMapBinPath = path.join(mapDir, 'mini_map.bin');
+      const mapBinData = fs.readFileSync(mapBinPath);
+      const miniMapBinData = fs.readFileSync(miniMapBinPath);
 
-      // Create game with test config
-      const config = new TestConfig();
-      const userSettings = new UserSettings({});
+      // Generate terrain from binary data
+      const gameMap = await genTerrainFromBin(manifest.map, mapBinData);
+      const miniGameMap = await genTerrainFromBin(manifest.mini_map, miniMapBinData);
 
-      this.game = createGame({
-        config,
-        width: this.mapWidth,
-        height: this.mapHeight,
-        terrainData,
-        userSettings,
-        players,
-        mode: 'Battle Royale' as any,
-        serverConfig: undefined
-      });
+      // Configure the game
+      const gameConfig: GameConfig = {
+        gameMap: GameMapType.Asia,
+        gameMode: GameMode.FFA,
+        gameType: GameType.Singleplayer,
+        difficulty: Difficulty.Easy,
+        disableNPCs: false,
+        donateGold: false,
+        donateTroops: false,
+        bots: 0,
+        infiniteGold: false,
+        infiniteTroops: false,
+        instantBuild: false,
+      };
+
+      // Suppress console.debug (reduces noise)
+      console.debug = () => {};
+
+      // Create config using TestConfig
+      const serverConfig = new TestServerConfig();
+      const config = new TestConfig(serverConfig, gameConfig, new UserSettings(), false);
+
+      // Create game with positional arguments (not an object!)
+      this.game = createGame(players, [], gameMap, miniGameMap, config);
+
+      if (!this.game) {
+        throw new Error('createGame() returned null');
+      }
+
+      this.log(`Game created, spawning ${numPlayers} players...`);
 
       // Spawn players
       const spawnExecutions: SpawnExecution[] = [];
       const angleStep = (2 * Math.PI) / players.length;
 
       for (let i = 0; i < players.length; i++) {
-        const player = this.game.player(players[i].name);
-        if (!player) continue;
-
         const angle = i * angleStep;
         const spawnRadius = Math.min(this.mapWidth, this.mapHeight) * 0.4;
         const centerX = this.mapWidth / 2;
@@ -192,9 +222,10 @@ class GameBridge {
 
         const spawnX = Math.floor(centerX + Math.cos(angle) * spawnRadius);
         const spawnY = Math.floor(centerY + Math.sin(angle) * spawnRadius);
+        const spawnPos = this.game.ref(spawnX, spawnY);
 
         spawnExecutions.push(
-          new SpawnExecution(player, spawnX, spawnY)
+          new SpawnExecution(players[i], spawnPos)
         );
       }
 
@@ -223,11 +254,15 @@ class GameBridge {
       this.previousTiles = this.rlPlayer.numTilesOwned();
       this.territoryHistory = [];
 
+      // Verify clusters are formed
+      const initialClusters = this.detectTerritoryClusters();
       this.log(`Game initialized: map=${mapName}, size=${this.mapWidth}x${this.mapHeight}, players=${numPlayers}`);
+      this.log(`RL Agent starting with ${this.rlPlayer.numTilesOwned()} tiles, ${initialClusters.length} cluster(s)`);
 
       return this.getState();
-    } catch (error) {
+    } catch (error: any) {
       this.log(`Initialization error: ${error}`);
+      this.log(`Stack trace: ${error.stack}`);
       throw error;
     }
   }
@@ -322,6 +357,56 @@ class GameBridge {
     const canBuildSam = gold >= SAM_COST;
     const canLaunchNuke = (atomBombsAvailable > 0 || hydrogenBombsAvailable > 0) && silosCount > 0;
 
+    // NEW: Extract unit positions for spatial observations
+    const ourCitiesPositions: Array<{x: number, y: number}> = [];
+    const ourPortsPositions: Array<{x: number, y: number}> = [];
+    const ourSilosPositions: Array<{x: number, y: number}> = [];
+    const ourSamPositions: Array<{x: number, y: number}> = [];
+    const ourDefensePositions: Array<{x: number, y: number}> = [];
+    const ourFactoriesPositions: Array<{x: number, y: number}> = [];
+
+    for (const unit of this.rlPlayer.units()) {
+      const tile = unit.tile();
+      if (!tile) continue; // Skip units without position
+
+      const x = this.game.x(tile);
+      const y = this.game.y(tile);
+      const unitType = unit.type();
+
+      if (unitType === 'City') {
+        ourCitiesPositions.push({x, y});
+      } else if (unitType === 'Port') {
+        ourPortsPositions.push({x, y});
+      } else if (unitType === 'Missile Silo') {
+        ourSilosPositions.push({x, y});
+      } else if (unitType === 'SAM Launcher') {
+        ourSamPositions.push({x, y});
+      } else if (unitType === 'Defense Post') {
+        ourDefensePositions.push({x, y});
+      } else if (unitType === 'Factory') {
+        ourFactoriesPositions.push({x, y});
+      }
+    }
+
+    // Extract enemy building positions
+    const enemyBuildingsPositions: Array<{x: number, y: number}> = [];
+    for (const aiPlayer of this.aiPlayers) {
+      if (!aiPlayer.isAlive()) continue;
+
+      for (const unit of aiPlayer.units()) {
+        const tile = unit.tile();
+        if (!tile) continue;
+
+        const unitType = unit.type();
+        // Only track buildings, not troops
+        if (['City', 'Port', 'Missile Silo', 'SAM Launcher', 'Defense Post', 'Factory'].includes(unitType)) {
+          const x = this.game.x(tile);
+          const y = this.game.y(tile);
+          enemyBuildingsPositions.push({x, y});
+        }
+      }
+    }
+
     // Update history
     this.previousTiles = tilesOwned;
 
@@ -368,7 +453,15 @@ class GameBridge {
       can_build_port: canBuildPort,
       can_build_silo: canBuildSilo,
       can_build_sam: canBuildSam,
-      can_launch_nuke: canLaunchNuke
+      can_launch_nuke: canLaunchNuke,
+      // NEW: Unit positions for spatial observations
+      our_cities_positions: ourCitiesPositions,
+      our_ports_positions: ourPortsPositions,
+      our_silos_positions: ourSilosPositions,
+      our_sam_positions: ourSamPositions,
+      our_defense_positions: ourDefensePositions,
+      our_factories_positions: ourFactoriesPositions,
+      enemy_buildings_positions: enemyBuildingsPositions
     };
   }
 
@@ -391,12 +484,13 @@ class GameBridge {
 
     // Validate cluster ID
     if (clusterId < 0 || clusterId >= clusters.length) {
+      if (clusters.length === 0) {
+        this.log(`WARNING: No clusters available! RL Agent has ${this.rlPlayer.numTilesOwned()} tiles`);
+        return false; // No territory!
+      }
       // Invalid cluster - fallback to largest cluster
+      this.log(`WARNING: Cluster ${clusterId} invalid, have ${clusters.length} clusters. Using cluster 0.`);
       clusterId = 0;
-    }
-
-    if (clusters.length === 0) {
-      return false; // No territory!
     }
 
     const cluster = clusters[clusterId];

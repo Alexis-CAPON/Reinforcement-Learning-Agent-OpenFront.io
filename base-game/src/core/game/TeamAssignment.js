@@ -1,11 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.assignTeams = assignTeams;
-const PseudoRandom_1 = require("../PseudoRandom");
-const Util_1 = require("../Util");
-const Game_1 = require("./Game");
-function assignTeams(players, teams) {
-    var _a, _b;
+import { PseudoRandom } from "../PseudoRandom";
+import { simpleHash } from "../Util";
+import { PlayerType } from "./Game";
+export function assignTeams(players, teams) {
     const result = new Map();
     const teamPlayerCount = new Map();
     // Group players by clan
@@ -32,7 +28,7 @@ function assignTeams(players, teams) {
         let team = null;
         let teamSize = 0;
         for (const t of teams) {
-            const p = (_a = teamPlayerCount.get(t)) !== null && _a !== void 0 ? _a : 0;
+            const p = teamPlayerCount.get(t) ?? 0;
             if (team !== null && teamSize <= p)
                 continue;
             teamSize = p;
@@ -52,18 +48,18 @@ function assignTeams(players, teams) {
         teamPlayerCount.set(team, teamSize);
     }
     // Then, assign non-clan players to balance teams
-    let nationPlayers = noClanPlayers.filter((player) => player.playerType === Game_1.PlayerType.FakeHuman);
+    let nationPlayers = noClanPlayers.filter((player) => player.playerType === PlayerType.FakeHuman);
     if (nationPlayers.length > 0) {
         // Shuffle only nations to randomize their team assignment
-        const random = new PseudoRandom_1.PseudoRandom((0, Util_1.simpleHash)(nationPlayers[0].id));
+        const random = new PseudoRandom(simpleHash(nationPlayers[0].id));
         nationPlayers = random.shuffleArray(nationPlayers);
     }
-    const otherPlayers = noClanPlayers.filter((player) => player.playerType !== Game_1.PlayerType.FakeHuman);
+    const otherPlayers = noClanPlayers.filter((player) => player.playerType !== PlayerType.FakeHuman);
     for (const player of otherPlayers.concat(nationPlayers)) {
         let team = null;
         let teamSize = 0;
         for (const t of teams) {
-            const p = (_b = teamPlayerCount.get(t)) !== null && _b !== void 0 ? _b : 0;
+            const p = teamPlayerCount.get(t) ?? 0;
             if (team !== null && teamSize <= p)
                 continue;
             teamSize = p;

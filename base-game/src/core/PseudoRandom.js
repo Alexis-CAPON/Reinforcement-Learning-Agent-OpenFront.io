@@ -1,10 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PseudoRandom = void 0;
-const seedrandom_1 = require("seedrandom");
-class PseudoRandom {
+import seedrandom from "seedrandom";
+export class PseudoRandom {
     constructor(seed) {
-        this.rng = (0, seedrandom_1.default)(String(seed));
+        this.rng = seedrandom(String(seed));
     }
     // Generates the next pseudorandom number between 0 and 1.
     next() {
@@ -62,5 +59,4 @@ class PseudoRandom {
         return result;
     }
 }
-exports.PseudoRandom = PseudoRandom;
 PseudoRandom.POW36_8 = Math.pow(36, 8); // Pre-compute 36^8

@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.WorkerClient = void 0;
-const Game_1 = require("../game/Game");
-const Util_1 = require("../Util");
-class WorkerClient {
+import { Cell, } from "../game/Game";
+import { generateID } from "../Util";
+export class WorkerClient {
     constructor(gameStartInfo, clientID) {
         this.gameStartInfo = gameStartInfo;
         this.clientID = clientID;
@@ -33,7 +30,7 @@ class WorkerClient {
     }
     initialize() {
         return new Promise((resolve, reject) => {
-            const messageId = (0, Util_1.generateID)();
+            const messageId = generateID();
             this.messageHandlers.set(messageId, (message) => {
                 if (message.type === "initialized") {
                     this.isInitialized = true;
@@ -81,7 +78,7 @@ class WorkerClient {
                 reject(new Error("Worker not initialized"));
                 return;
             }
-            const messageId = (0, Util_1.generateID)();
+            const messageId = generateID();
             this.messageHandlers.set(messageId, (message) => {
                 if (message.type === "player_profile_result" &&
                     message.result !== undefined) {
@@ -101,7 +98,7 @@ class WorkerClient {
                 reject(new Error("Worker not initialized"));
                 return;
             }
-            const messageId = (0, Util_1.generateID)();
+            const messageId = generateID();
             this.messageHandlers.set(messageId, (message) => {
                 if (message.type === "player_border_tiles_result" &&
                     message.result !== undefined) {
@@ -121,7 +118,7 @@ class WorkerClient {
                 reject(new Error("Worker not initialized"));
                 return;
             }
-            const messageId = (0, Util_1.generateID)();
+            const messageId = generateID();
             this.messageHandlers.set(messageId, (message) => {
                 if (message.type === "player_actions_result" &&
                     message.result !== undefined) {
@@ -143,7 +140,7 @@ class WorkerClient {
                 reject(new Error("Worker not initialized"));
                 return;
             }
-            const messageId = (0, Util_1.generateID)();
+            const messageId = generateID();
             this.messageHandlers.set(messageId, (message) => {
                 if (message.type === "attack_average_position_result" &&
                     message.x !== undefined &&
@@ -152,7 +149,7 @@ class WorkerClient {
                         resolve(null);
                     }
                     else {
-                        resolve(new Game_1.Cell(message.x, message.y));
+                        resolve(new Cell(message.x, message.y));
                     }
                 }
             });
@@ -170,7 +167,7 @@ class WorkerClient {
                 reject(new Error("Worker not initialized"));
                 return;
             }
-            const messageId = (0, Util_1.generateID)();
+            const messageId = generateID();
             this.messageHandlers.set(messageId, (message) => {
                 if (message.type === "transport_ship_spawn_result" &&
                     message.result !== undefined) {
@@ -191,4 +188,3 @@ class WorkerClient {
         this.gameUpdateCallback = undefined;
     }
 }
-exports.WorkerClient = WorkerClient;

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: openfrontio-rl:latest
+
+    # GPU support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+    # Mount volumes for persistent storage
+    volumes:
+      # Training outputs
+      - ./phase5-implementation/models:/workspace/phase5-implementation/models
+      - ./phase5-implementation/logs:/workspace/phase5-implementation/logs
+      - ./phase5-implementation/runs:/workspace/phase5-implementation/runs
+
+      # Optional: Mount code for development
+      # - ./phase5-implementation/src:/workspace/phase5-implementation/src
+
+    # Environment variables
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - NVIDIA_VISIBLE_DEVICES=all
+
+    # Keep container running
+    stdin_open: true
+    tty: true
+
+    # Custom command (override default)
+    command: python3 train_full_game.py --device cuda --map australia_256x256 --bots 10 --timesteps 20000000 --lr 3e-4 --n-steps 2048
+
+  tensorboard:
+    image: openfrontio-rl:latest
+    ports:
+      - "6006:6006"
+    volumes:
+      - ./phase5-implementation/runs:/workspace/phase5-implementation/runs
+    command: tensorboard --logdir runs/ --host 0.0.0.0 --port 6006

@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.BOT_NAME_SUFFIXES = exports.BOT_NAME_PREFIXES = void 0;
-exports.BOT_NAME_PREFIXES = [
+export const BOT_NAME_PREFIXES = [
     "Akkadian",
     "Babylonian",
     "Sumerian",
@@ -183,7 +180,7 @@ exports.BOT_NAME_PREFIXES = [
     "Militant",
     "Spartan",
 ];
-exports.BOT_NAME_SUFFIXES = [
+export const BOT_NAME_SUFFIXES = [
     "Empire",
     "Dynasty",
     "Kingdom",

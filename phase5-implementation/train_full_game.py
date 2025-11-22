@@ -21,7 +21,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 import numpy as np
-from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecMonitor
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.wrappers import ActionMasker
@@ -38,6 +38,9 @@ logger = logging.getLogger(__name__)
 
 def mask_fn(env):
     """Wrapper function to get action masks from environment"""
+    # Use unwrapped to get the base environment
+    if hasattr(env, 'unwrapped'):
+        return env.unwrapped.action_masks()
     return env.action_masks()
 
 
@@ -68,6 +71,8 @@ def train_full_game(
     map_name: str = 'australia_256x256',
     num_bots: int = 10,
     total_timesteps: int = 20_000_000,
+    device: str = 'auto',
+    n_envs: int = 8,
     save_freq: int = 100_000,
     eval_freq: int = 50_000,
     n_eval_episodes: int = 5,
@@ -109,8 +114,10 @@ def train_full_game(
     logger.info("=" * 80)
     logger.info(f"Map: {map_name}")
     logger.info(f"Opponents: {num_bots} bots")
+    logger.info(f"Parallel envs: {n_envs}")
     logger.info(f"Total timesteps: {total_timesteps:,}")
     logger.info(f"Action space: 5 × 11 × 5 × 7 × 2 × 10 × 10 = 38,500 actions")
+    logger.info(f"Observation space: 128×128×16 channels + 32 global features")
     logger.info(f"Features: Buildings (6 types), Nukes (2 types), Action masking")
     logger.info("=" * 80)
 
@@ -125,18 +132,24 @@ def train_full_game(
     logger.info(f"Log directory: {log_dir}")
 
     # Create training environment
-    logger.info("Creating training environment...")
-    env = DummyVecEnv([make_env(map_name, num_bots)])
+    logger.info(f"Creating {n_envs} parallel training environment(s)...")
+    if n_envs == 1:
+        env = DummyVecEnv([make_env(map_name, num_bots)])
+    else:
+        # Use SubprocVecEnv for true parallelism (each env in separate process)
+        env = SubprocVecEnv([make_env(map_name, num_bots) for _ in range(n_envs)])
     env = VecMonitor(env, log_dir)
 
-    # Create evaluation environment
+    # Create evaluation environment (always single env)
     logger.info("Creating evaluation environment...")
     eval_env = DummyVecEnv([make_env(map_name, num_bots)])
     eval_env = VecMonitor(eval_env, f"{log_dir}/eval")
 
     # Create callbacks
+    # Note: save_freq is per environment, so with n_envs=12, it saves 12x more frequently
+    # Adjust if needed: save_freq_adjusted = save_freq * n_envs
     checkpoint_callback = CheckpointCallback(
-        save_freq=save_freq,
+        save_freq=max(save_freq // n_envs, 1),  # Adjust for parallel envs
         save_path=model_dir,
         name_prefix='checkpoint',
         save_replay_buffer=False,
@@ -147,7 +160,7 @@ def train_full_game(
         eval_env,
         best_model_save_path=model_dir,
         log_path=f"{log_dir}/eval",
-        eval_freq=eval_freq,
+        eval_freq=max(eval_freq // n_envs, 1),  # Adjust for parallel envs
         n_eval_episodes=n_eval_episodes,
         deterministic=False,  # Use stochastic policy for evaluation
         render=False
@@ -192,7 +205,7 @@ def train_full_game(
         verbose=1,
         tensorboard_log=log_dir,
         policy_kwargs=policy_kwargs,
-        device='auto'  # Use GPU if available
+        device=device
     )
 
     logger.info(f"Model device: {model.device}")
@@ -251,6 +264,10 @@ if __name__ == '__main__':
     # Training args
     parser.add_argument('--timesteps', type=int, default=20_000_000,
                        help='Total training timesteps (default: 20M)')
+    parser.add_argument('--device', type=str, default='auto',
+                       help='Device to use: auto, cpu, cuda, or mps (default: auto)')
+    parser.add_argument('--n-envs', type=int, default=8,
+                       help='Number of parallel environments (default: 8, recommended: 4-16 for GPU)')
     parser.add_argument('--save-freq', type=int, default=100_000,
                        help='Checkpoint save frequency (default: 100K)')
     parser.add_argument('--eval-freq', type=int, default=50_000,
@@ -295,6 +312,8 @@ if __name__ == '__main__':
         map_name=args.map,
         num_bots=args.bots,
         total_timesteps=args.timesteps,
+        device=args.device,
+        n_envs=args.n_envs,
         save_freq=args.save_freq,
         eval_freq=args.eval_freq,
         n_eval_episodes=args.eval_episodes,

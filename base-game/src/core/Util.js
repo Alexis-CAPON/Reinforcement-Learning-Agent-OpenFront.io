@@ -1,33 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.flattenedEmojiTable = exports.emojiTable = void 0;
-exports.manhattanDistWrapped = manhattanDistWrapped;
-exports.within = within;
-exports.distSort = distSort;
-exports.distSortUnit = distSortUnit;
-exports.simpleHash = simpleHash;
-exports.calculateBoundingBox = calculateBoundingBox;
-exports.calculateBoundingBoxCenter = calculateBoundingBoxCenter;
-exports.inscribed = inscribed;
-exports.getMode = getMode;
-exports.sanitize = sanitize;
-exports.onlyImages = onlyImages;
-exports.createGameRecord = createGameRecord;
-exports.decompressGameRecord = decompressGameRecord;
-exports.assertNever = assertNever;
-exports.generateID = generateID;
-exports.toInt = toInt;
-exports.maxInt = maxInt;
-exports.minInt = minInt;
-exports.withinInt = withinInt;
-exports.createRandomName = createRandomName;
-exports.replacer = replacer;
-exports.sigmoid = sigmoid;
-const dompurify_1 = require("dompurify");
-const nanoid_1 = require("nanoid");
-const Game_1 = require("./game/Game");
-const BotNames_1 = require("./execution/utils/BotNames");
-function manhattanDistWrapped(c1, c2, width) {
+import DOMPurify from "dompurify";
+import { customAlphabet } from "nanoid";
+import { Cell } from "./game/Game";
+import { BOT_NAME_PREFIXES, BOT_NAME_SUFFIXES, } from "./execution/utils/BotNames";
+export function manhattanDistWrapped(c1, c2, width) {
     // Calculate x distance
     let dx = Math.abs(c1.x - c2.x);
     // Check if wrapping around the x-axis is shorter
@@ -37,22 +12,22 @@ function manhattanDistWrapped(c1, c2, width) {
     // Return the sum of x and y distances
     return dx + dy;
 }
-function within(value, min, max) {
+export function within(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
-function distSort(gm, target) {
+export function distSort(gm, target) {
     return (a, b) => {
         return gm.manhattanDist(a, target) - gm.manhattanDist(b, target);
     };
 }
-function distSortUnit(gm, target) {
+export function distSortUnit(gm, target) {
     const targetRef = typeof target === "number" ? target : target.tile();
     return (a, b) => {
         return (gm.manhattanDist(a.tile(), targetRef) -
             gm.manhattanDist(b.tile(), targetRef));
     };
 }
-function simpleHash(str) {
+export function simpleHash(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
@@ -61,7 +36,7 @@ function simpleHash(str) {
     }
     return Math.abs(hash);
 }
-function calculateBoundingBox(gm, borderTiles) {
+export function calculateBoundingBox(gm, borderTiles) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     borderTiles.forEach((tile) => {
         const cell = gm.cell(tile);
@@ -70,24 +45,23 @@ function calculateBoundingBox(gm, borderTiles) {
         maxX = Math.max(maxX, cell.x);
         maxY = Math.max(maxY, cell.y);
     });
-    return { min: new Game_1.Cell(minX, minY), max: new Game_1.Cell(maxX, maxY) };
+    return { min: new Cell(minX, minY), max: new Cell(maxX, maxY) };
 }
-function calculateBoundingBoxCenter(gm, borderTiles) {
+export function calculateBoundingBoxCenter(gm, borderTiles) {
     const { min, max } = calculateBoundingBox(gm, borderTiles);
-    return new Game_1.Cell(min.x + Math.floor((max.x - min.x) / 2), min.y + Math.floor((max.y - min.y) / 2));
+    return new Cell(min.x + Math.floor((max.x - min.x) / 2), min.y + Math.floor((max.y - min.y) / 2));
 }
-function inscribed(outer, inner) {
+export function inscribed(outer, inner) {
     return (outer.min.x <= inner.min.x &&
         outer.min.y <= inner.min.y &&
         outer.max.x >= inner.max.x &&
         outer.max.y >= inner.max.y);
 }
-function getMode(list) {
-    var _a;
+export function getMode(list) {
     // Count occurrences
     const counts = new Map();
     for (const item of list) {
-        counts.set(item, ((_a = counts.get(item)) !== null && _a !== void 0 ? _a : 0) + 1);
+        counts.set(item, (counts.get(item) ?? 0) + 1);
     }
     // Find the item with the highest count
     let mode = 0;
@@ -100,20 +74,20 @@ function getMode(list) {
     }
     return mode;
 }
-function sanitize(name) {
+export function sanitize(name) {
     return Array.from(name)
         .join("")
         .replace(/[^\p{L}\p{N}\s\p{Emoji}\p{Emoji_Component}[\]_]/gu, "");
 }
-function onlyImages(html) {
-    return dompurify_1.default.sanitize(html, {
+export function onlyImages(html) {
+    return DOMPurify.sanitize(html, {
         ALLOWED_TAGS: ["span", "img"],
         ALLOWED_ATTR: ["src", "alt", "class", "style"],
         ALLOWED_URI_REGEXP: /^https:\/\/cdn\.jsdelivr\.net\/gh\/twitter\/twemoji/,
         ADD_ATTR: ["style"],
     });
 }
-function createGameRecord(gameID, config, 
+export function createGameRecord(gameID, config, 
 // username does not need to be set.
 players, allTurns, start, end, winner, serverConfig) {
     const duration = Math.floor((end - start) / 1000);
@@ -142,7 +116,7 @@ players, allTurns, start, end, winner, serverConfig) {
     };
     return record;
 }
-function decompressGameRecord(gameRecord) {
+export function decompressGameRecord(gameRecord) {
     const turns = [];
     let lastTurnNum = -1;
     for (const turn of gameRecord.turns) {
@@ -166,14 +140,14 @@ function decompressGameRecord(gameRecord) {
     gameRecord.turns = turns;
     return gameRecord;
 }
-function assertNever(x) {
+export function assertNever(x) {
     throw new Error("Unexpected value: " + x);
 }
-function generateID() {
-    const nanoid = (0, nanoid_1.customAlphabet)("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 8);
+export function generateID() {
+    const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 8);
     return nanoid();
 }
-function toInt(num) {
+export function toInt(num) {
     if (num === Infinity) {
         return BigInt(Number.MAX_SAFE_INTEGER);
     }
@@ -182,27 +156,27 @@ function toInt(num) {
     }
     return BigInt(Math.floor(num));
 }
-function maxInt(a, b) {
+export function maxInt(a, b) {
     return a > b ? a : b;
 }
-function minInt(a, b) {
+export function minInt(a, b) {
     return a < b ? a : b;
 }
-function withinInt(num, min, max) {
+export function withinInt(num, min, max) {
     const atLeastMin = maxInt(num, min);
     return minInt(atLeastMin, max);
 }
-function createRandomName(name, playerType) {
+export function createRandomName(name, playerType) {
     let randomName = null;
     if (playerType === "HUMAN") {
         const hash = simpleHash(name);
-        const prefixIndex = hash % BotNames_1.BOT_NAME_PREFIXES.length;
-        const suffixIndex = Math.floor(hash / BotNames_1.BOT_NAME_PREFIXES.length) % BotNames_1.BOT_NAME_SUFFIXES.length;
-        randomName = `👤 ${BotNames_1.BOT_NAME_PREFIXES[prefixIndex]} ${BotNames_1.BOT_NAME_SUFFIXES[suffixIndex]}`;
+        const prefixIndex = hash % BOT_NAME_PREFIXES.length;
+        const suffixIndex = Math.floor(hash / BOT_NAME_PREFIXES.length) % BOT_NAME_SUFFIXES.length;
+        randomName = `👤 ${BOT_NAME_PREFIXES[prefixIndex]} ${BOT_NAME_SUFFIXES[suffixIndex]}`;
     }
     return randomName;
 }
-exports.emojiTable = [
+export const emojiTable = [
     ["😀", "😊", "🥰", "😇", "😎"],
     ["😞", "🥺", "😭", "😱", "😡"],
     ["😈", "🤡", "🖕", "🥱", "🤦‍♂️"],
@@ -216,13 +190,13 @@ exports.emojiTable = [
     ["💰", "⚓", "⛵", "🏡", "🛡️"],
 ];
 // 2d to 1d array
-exports.flattenedEmojiTable = exports.emojiTable.flat();
+export const flattenedEmojiTable = emojiTable.flat();
 /**
  * JSON.stringify replacer function that converts bigint values to strings.
  */
-function replacer(_key, value) {
+export function replacer(_key, value) {
     return typeof value === "bigint" ? value.toString() : value;
 }
-function sigmoid(value, decayRate, midpoint) {
+export function sigmoid(value, decayRate, midpoint) {
     return 1 / (1 + Math.exp(-decayRate * (value - midpoint)));
 }

@@ -1,4 +1,3 @@
-"use strict";
 var __esDecorate = (this && this.__esDecorate) || function (ctor, descriptorIn, decorators, contextIn, initializers, extraInitializers) {
     function accept(f) { if (f !== void 0 && typeof f !== "function") throw new TypeError("Function expected"); return f; }
     var kind = contextIn.kind, key = kind === "getter" ? "get" : kind === "setter" ? "set" : "value";
@@ -37,17 +36,15 @@ var __setFunctionName = (this && this.__setFunctionName) || function (f, name, p
     if (typeof name === "symbol") name = name.description ? "[".concat(name.description, "]") : "";
     return Object.defineProperty(f, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LanguageModal = void 0;
-const lit_1 = require("lit");
-const decorators_js_1 = require("lit/decorators.js");
-const Utils_1 = require("../client/Utils");
+import { LitElement, html } from "lit";
+import { customElement, property } from "lit/decorators.js";
+import { translateText } from "../client/Utils";
 let LanguageModal = (() => {
-    let _classDecorators = [(0, decorators_js_1.customElement)("language-modal")];
+    let _classDecorators = [customElement("language-modal")];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
-    let _classSuper = lit_1.LitElement;
+    let _classSuper = LitElement;
     let _visible_decorators;
     let _visible_initializers = [];
     let _visible_extraInitializers = [];
@@ -108,7 +105,7 @@ let LanguageModal = (() => {
         render() {
             if (!this.visible)
                 return null;
-            return (0, lit_1.html) `
+            return html `
       <aside
         class="fixed p-4 z-[1000] inset-0 bg-black/50 overflow-y-auto flex items-center justify-center"
       >
@@ -118,7 +115,7 @@ let LanguageModal = (() => {
           <header
             class="relative rounded-t-md text-lg bg-black/60 dark:bg-black/80 text-center text-white px-6 py-4 pr-10"
           >
-            ${(0, Utils_1.translateText)("select_lang.title")}
+            ${translateText("select_lang.title")}
             <div
               class="cursor-pointer absolute right-4 top-4 font-bold hover:text-gray-300"
               @click=${this.close}
@@ -146,7 +143,7 @@ let LanguageModal = (() => {
                     buttonClasses +=
                         " bg-gray-600 dark:bg-gray-700 border-gray-500 dark:border-gray-600 text-white dark:text-gray-100 hover:bg-gray-500 dark:hover:bg-gray-600";
                 }
-                return (0, lit_1.html) `
+                return html `
                 <button
                   class="${buttonClasses}"
                   @click=${() => this.selectLanguage(lang.code)}
@@ -168,11 +165,10 @@ let LanguageModal = (() => {
     };
     __setFunctionName(_classThis, "LanguageModal");
     (() => {
-        var _a;
-        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create((_a = _classSuper[Symbol.metadata]) !== null && _a !== void 0 ? _a : null) : void 0;
-        _visible_decorators = [(0, decorators_js_1.property)({ type: Boolean })];
-        _languageList_decorators = [(0, decorators_js_1.property)({ type: Array })];
-        _currentLang_decorators = [(0, decorators_js_1.property)({ type: String })];
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(_classSuper[Symbol.metadata] ?? null) : void 0;
+        _visible_decorators = [property({ type: Boolean })];
+        _languageList_decorators = [property({ type: Array })];
+        _currentLang_decorators = [property({ type: String })];
         __esDecorate(null, null, _visible_decorators, { kind: "field", name: "visible", static: false, private: false, access: { has: obj => "visible" in obj, get: obj => obj.visible, set: (obj, value) => { obj.visible = value; } }, metadata: _metadata }, _visible_initializers, _visible_extraInitializers);
         __esDecorate(null, null, _languageList_decorators, { kind: "field", name: "languageList", static: false, private: false, access: { has: obj => "languageList" in obj, get: obj => obj.languageList, set: (obj, value) => { obj.languageList = value; } }, metadata: _metadata }, _languageList_initializers, _languageList_extraInitializers);
         __esDecorate(null, null, _currentLang_decorators, { kind: "field", name: "currentLang", static: false, private: false, access: { has: obj => "currentLang" in obj, get: obj => obj.currentLang, set: (obj, value) => { obj.currentLang = value; } }, metadata: _metadata }, _currentLang_initializers, _currentLang_extraInitializers);
@@ -183,4 +179,4 @@ let LanguageModal = (() => {
     })();
     return LanguageModal = _classThis;
 })();
-exports.LanguageModal = LanguageModal;
+export { LanguageModal };

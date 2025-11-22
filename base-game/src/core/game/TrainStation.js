@@ -1,10 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Cluster = exports.TrainStationMapAdapter = exports.TrainStation = void 0;
-exports.createTrainStopHandlers = createTrainStopHandlers;
-const PseudoRandom_1 = require("../PseudoRandom");
-const Game_1 = require("./Game");
-const GameUpdates_1 = require("./GameUpdates");
+import { PseudoRandom } from "../PseudoRandom";
+import { UnitType } from "./Game";
+import { GameUpdateType, RailType } from "./GameUpdates";
 /**
  * All stop handlers share the same logic for the time being
  * Behavior to be defined
@@ -39,20 +35,20 @@ class PortStopHandler {
 class FactoryStopHandler {
     onStop(mg, station, trainExecution) { }
 }
-function createTrainStopHandlers(random) {
+export function createTrainStopHandlers(random) {
     return {
-        [Game_1.UnitType.City]: new CityStopHandler(),
-        [Game_1.UnitType.Port]: new PortStopHandler(random),
-        [Game_1.UnitType.Factory]: new FactoryStopHandler(),
+        [UnitType.City]: new CityStopHandler(),
+        [UnitType.Port]: new PortStopHandler(random),
+        [UnitType.Factory]: new FactoryStopHandler(),
     };
 }
-class TrainStation {
+export class TrainStation {
     constructor(mg, unit) {
         this.mg = mg;
         this.unit = unit;
         this.stopHandlers = {};
         this.railroads = new Set();
-        this.stopHandlers = createTrainStopHandlers(new PseudoRandom_1.PseudoRandom(mg.ticks()));
+        this.stopHandlers = createTrainStopHandlers(new PseudoRandom(mg.ticks()));
     }
     tradeAvailable(otherPlayer) {
         const player = this.unit.owner();
@@ -69,10 +65,10 @@ class TrainStation {
         if (toRemove) {
             const railTiles = toRemove.tiles.map((tile) => ({
                 tile,
-                railType: GameUpdates_1.RailType.VERTICAL,
+                railType: RailType.VERTICAL,
             }));
             this.mg.addUpdate({
-                type: GameUpdates_1.GameUpdateType.RailroadEvent,
+                type: GameUpdateType.RailroadEvent,
                 isActive: false,
                 railTiles,
             });
@@ -114,11 +110,10 @@ class TrainStation {
         }
     }
 }
-exports.TrainStation = TrainStation;
 /**
  * Make the trainstation usable with A*
  */
-class TrainStationMapAdapter {
+export class TrainStationMapAdapter {
     constructor(game) {
         this.game = game;
     }
@@ -135,11 +130,10 @@ class TrainStationMapAdapter {
         return true;
     }
 }
-exports.TrainStationMapAdapter = TrainStationMapAdapter;
 /**
  * Cluster of connected stations
  */
-class Cluster {
+export class Cluster {
     constructor() {
         this.stations = new Set();
     }
@@ -166,8 +160,8 @@ class Cluster {
     availableForTrade(player) {
         const tradingStations = new Set();
         for (const station of this.stations) {
-            if ((station.unit.type() === Game_1.UnitType.City ||
-                station.unit.type() === Game_1.UnitType.Port) &&
+            if ((station.unit.type() === UnitType.City ||
+                station.unit.type() === UnitType.Port) &&
                 station.tradeAvailable(player)) {
                 tradingStations.add(station);
             }
@@ -181,7 +175,6 @@ class Cluster {
         this.stations.clear();
     }
 }
-exports.Cluster = Cluster;
 function rel(player, other) {
     if (player === other) {
         return "self";

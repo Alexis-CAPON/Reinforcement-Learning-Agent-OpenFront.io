@@ -1,12 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.FlatBinaryHeap = void 0;
 /**
  * Lightweight min-heap specialised for (priority:number, tile:TileRef) pairs.
  * - priorities stored in a contiguous Float32Array
  * - tiles stored in a parallel object array
  */
-class FlatBinaryHeap {
+export class FlatBinaryHeap {
     constructor(capacity = 1024) {
         this.len = 0; // current number of elements
         this.pri = new Float32Array(capacity);
@@ -72,4 +69,3 @@ class FlatBinaryHeap {
         this.tiles.length = newCap;
     }
 }
-exports.FlatBinaryHeap = FlatBinaryHeap;

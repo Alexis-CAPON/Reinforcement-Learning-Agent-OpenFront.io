@@ -1,12 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.BotBehavior = void 0;
-const Game_1 = require("../../game/Game");
-const Util_1 = require("../../Util");
-const AllianceExtensionExecution_1 = require("../alliance/AllianceExtensionExecution");
-const AttackExecution_1 = require("../AttackExecution");
-const EmojiExecution_1 = require("../EmojiExecution");
-class BotBehavior {
+import { PlayerType, Relation, } from "../../game/Game";
+import { flattenedEmojiTable } from "../../Util";
+import { AllianceExtensionExecution } from "../alliance/AllianceExtensionExecution";
+import { AttackExecution } from "../AttackExecution";
+import { EmojiExecution } from "../EmojiExecution";
+export class BotBehavior {
     constructor(random, game, player, triggerRatio, reserveRatio, expandRatio) {
         this.random = random;
         this.game = game;
@@ -15,7 +12,7 @@ class BotBehavior {
         this.reserveRatio = reserveRatio;
         this.expandRatio = expandRatio;
         this.enemy = null;
-        this.assistAcceptEmoji = Util_1.flattenedEmojiTable.indexOf("👍");
+        this.assistAcceptEmoji = flattenedEmojiTable.indexOf("👍");
     }
     handleAllianceRequests() {
         for (const req of this.player.incomingAllianceRequests()) {
@@ -36,18 +33,18 @@ class BotBehavior {
             // Nation is either Friendly or Neutral as an ally. Bot has no attitude
             // If Friendly or Bot, always agree to extend. If Neutral, have random chance decide
             const human = alliance.other(this.player);
-            if (this.player.type() === Game_1.PlayerType.FakeHuman &&
-                this.player.relation(human) === Game_1.Relation.Neutral) {
+            if (this.player.type() === PlayerType.FakeHuman &&
+                this.player.relation(human) === Relation.Neutral) {
                 if (!this.random.chance(1.5))
                     continue;
             }
-            this.game.addExecution(new AllianceExtensionExecution_1.AllianceExtensionExecution(this.player, human.id()));
+            this.game.addExecution(new AllianceExtensionExecution(this.player, human.id()));
         }
     }
     emoji(player, emoji) {
-        if (player.type() !== Game_1.PlayerType.Human)
+        if (player.type() !== PlayerType.Human)
             return;
-        this.game.addExecution(new EmojiExecution_1.EmojiExecution(this.player, player.id(), emoji));
+        this.game.addExecution(new EmojiExecution(this.player, player.id(), emoji));
     }
     setNewEnemy(newEnemy) {
         this.enemy = newEnemy;
@@ -92,7 +89,7 @@ class BotBehavior {
         outer: for (const ally of this.player.allies()) {
             if (ally.targets().length === 0)
                 continue;
-            if (this.player.relation(ally) < Game_1.Relation.Friendly) {
+            if (this.player.relation(ally) < Relation.Friendly) {
                 // this.emoji(ally, "🤦");
                 continue;
             }
@@ -121,7 +118,7 @@ class BotBehavior {
             // Prefer neighboring bots
             const bots = this.player
                 .neighbors()
-                .filter((n) => n.isPlayer() && n.type() === Game_1.PlayerType.Bot);
+                .filter((n) => n.isPlayer() && n.type() === PlayerType.Bot);
             if (bots.length > 0) {
                 const density = (p) => p.troops() / p.numTilesOwned();
                 let lowestDensityBot;
@@ -145,7 +142,7 @@ class BotBehavior {
             if (this.enemy === null) {
                 const mostHated = this.player.allRelationsSorted()[0];
                 if (mostHated !== undefined &&
-                    mostHated.relation === Game_1.Relation.Hostile) {
+                    mostHated.relation === Relation.Hostile) {
                     this.setNewEnemy(mostHated.player);
                 }
             }
@@ -165,7 +162,7 @@ class BotBehavior {
                     continue;
                 if (this.player.isFriendly(neighbor))
                     continue;
-                if (neighbor.type() === Game_1.PlayerType.FakeHuman) {
+                if (neighbor.type() === PlayerType.FakeHuman) {
                     if (this.random.chance(2)) {
                         continue;
                     }
@@ -206,12 +203,11 @@ class BotBehavior {
         const troops = this.player.troops() - targetTroops;
         if (troops < 1)
             return;
-        this.game.addExecution(new AttackExecution_1.AttackExecution(troops, this.player, target.isPlayer() ? target.id() : null));
+        this.game.addExecution(new AttackExecution(troops, this.player, target.isPlayer() ? target.id() : null));
     }
 }
-exports.BotBehavior = BotBehavior;
 function shouldAcceptAllianceRequest(player, request) {
-    if (player.relation(request.requestor()) < Game_1.Relation.Neutral) {
+    if (player.relation(request.requestor()) < Relation.Neutral) {
         return false; // Reject if hasMalice
     }
     if (request.requestor().isTraitor()) {

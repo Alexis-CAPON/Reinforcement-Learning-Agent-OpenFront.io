@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PatternDecoder = void 0;
-class PatternDecoder {
+export class PatternDecoder {
     constructor(base64, base64urlDecode) {
         this.bytes = base64urlDecode(base64);
         if (this.bytes.length < 3) {
@@ -40,4 +37,3 @@ class PatternDecoder {
         return this.width << this.scale;
     }
 }
-exports.PatternDecoder = PatternDecoder;

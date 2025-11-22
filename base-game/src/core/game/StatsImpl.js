@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.StatsImpl = void 0;
-const StatsSchemas_1 = require("../StatsSchemas");
+import { ATTACK_INDEX_CANCEL, ATTACK_INDEX_RECV, ATTACK_INDEX_SENT, BOAT_INDEX_ARRIVE, BOAT_INDEX_CAPTURE, BOAT_INDEX_DESTROY, BOAT_INDEX_SENT, BOMB_INDEX_INTERCEPT, BOMB_INDEX_LAND, BOMB_INDEX_LAUNCH, GOLD_INDEX_STEAL, GOLD_INDEX_TRADE, GOLD_INDEX_WAR, GOLD_INDEX_WORK, OTHER_INDEX_BUILT, OTHER_INDEX_CAPTURE, OTHER_INDEX_DESTROY, OTHER_INDEX_LOST, OTHER_INDEX_UPGRADE, unitTypeToBombUnit, unitTypeToOtherUnit, } from "../StatsSchemas";
 function _bigint(value) {
     switch (typeof value) {
         case "bigint":
@@ -10,7 +7,7 @@ function _bigint(value) {
             return BigInt(Math.floor(value));
     }
 }
-class StatsImpl {
+export class StatsImpl {
     constructor() {
         this.data = {};
     }
@@ -35,11 +32,10 @@ class StatsImpl {
         return data;
     }
     _addAttack(player, index, value) {
-        var _a;
         const p = this._makePlayerStats(player);
         if (p === undefined)
             return;
-        (_a = p.attacks) !== null && _a !== void 0 ? _a : (p.attacks = [0n]);
+        p.attacks ?? (p.attacks = [0n]);
         while (p.attacks.length <= index)
             p.attacks.push(0n);
         p.attacks[index] += _bigint(value);
@@ -56,122 +52,117 @@ class StatsImpl {
         }
     }
     _addBoat(player, type, index, value) {
-        var _a, _b;
-        var _c;
+        var _a;
         const p = this._makePlayerStats(player);
         if (p === undefined)
             return;
-        (_a = p.boats) !== null && _a !== void 0 ? _a : (p.boats = { [type]: [0n] });
-        (_b = (_c = p.boats)[type]) !== null && _b !== void 0 ? _b : (_c[type] = [0n]);
+        p.boats ?? (p.boats = { [type]: [0n] });
+        (_a = p.boats)[type] ?? (_a[type] = [0n]);
         while (p.boats[type].length <= index)
             p.boats[type].push(0n);
         p.boats[type][index] += _bigint(value);
     }
     _addBomb(player, nukeType, index, value) {
-        var _a, _b;
-        var _c;
-        const type = StatsSchemas_1.unitTypeToBombUnit[nukeType];
+        var _a;
+        const type = unitTypeToBombUnit[nukeType];
         const p = this._makePlayerStats(player);
         if (p === undefined)
             return;
-        (_a = p.bombs) !== null && _a !== void 0 ? _a : (p.bombs = { [type]: [0n] });
-        (_b = (_c = p.bombs)[type]) !== null && _b !== void 0 ? _b : (_c[type] = [0n]);
+        p.bombs ?? (p.bombs = { [type]: [0n] });
+        (_a = p.bombs)[type] ?? (_a[type] = [0n]);
         while (p.bombs[type].length <= index)
             p.bombs[type].push(0n);
         p.bombs[type][index] += _bigint(value);
     }
     _addGold(player, index, value) {
-        var _a;
         const p = this._makePlayerStats(player);
         if (p === undefined)
             return;
-        (_a = p.gold) !== null && _a !== void 0 ? _a : (p.gold = [0n]);
+        p.gold ?? (p.gold = [0n]);
         while (p.gold.length <= index)
             p.gold.push(0n);
         p.gold[index] += _bigint(value);
     }
     _addOtherUnit(player, otherUnitType, index, value) {
-        var _a, _b;
-        var _c;
-        const type = StatsSchemas_1.unitTypeToOtherUnit[otherUnitType];
+        var _a;
+        const type = unitTypeToOtherUnit[otherUnitType];
         const p = this._makePlayerStats(player);
         if (p === undefined)
             return;
-        (_a = p.units) !== null && _a !== void 0 ? _a : (p.units = { [type]: [0n] });
-        (_b = (_c = p.units)[type]) !== null && _b !== void 0 ? _b : (_c[type] = [0n]);
+        p.units ?? (p.units = { [type]: [0n] });
+        (_a = p.units)[type] ?? (_a[type] = [0n]);
         while (p.units[type].length <= index)
             p.units[type].push(0n);
         p.units[type][index] += _bigint(value);
     }
     attack(player, target, troops) {
-        this._addAttack(player, StatsSchemas_1.ATTACK_INDEX_SENT, troops);
+        this._addAttack(player, ATTACK_INDEX_SENT, troops);
         if (target.isPlayer()) {
-            this._addAttack(target, StatsSchemas_1.ATTACK_INDEX_RECV, troops);
+            this._addAttack(target, ATTACK_INDEX_RECV, troops);
         }
     }
     attackCancel(player, target, troops) {
-        this._addAttack(player, StatsSchemas_1.ATTACK_INDEX_CANCEL, troops);
-        this._addAttack(player, StatsSchemas_1.ATTACK_INDEX_SENT, -troops);
+        this._addAttack(player, ATTACK_INDEX_CANCEL, troops);
+        this._addAttack(player, ATTACK_INDEX_SENT, -troops);
         if (target.isPlayer()) {
-            this._addAttack(target, StatsSchemas_1.ATTACK_INDEX_RECV, -troops);
+            this._addAttack(target, ATTACK_INDEX_RECV, -troops);
         }
     }
     betray(player) {
         this._addBetrayal(player, 1);
     }
     boatSendTrade(player, target) {
-        this._addBoat(player, "trade", StatsSchemas_1.BOAT_INDEX_SENT, 1);
+        this._addBoat(player, "trade", BOAT_INDEX_SENT, 1);
     }
     boatArriveTrade(player, target, gold) {
-        this._addBoat(player, "trade", StatsSchemas_1.BOAT_INDEX_ARRIVE, 1);
-        this._addGold(player, StatsSchemas_1.GOLD_INDEX_TRADE, gold);
-        this._addGold(target, StatsSchemas_1.GOLD_INDEX_TRADE, gold);
+        this._addBoat(player, "trade", BOAT_INDEX_ARRIVE, 1);
+        this._addGold(player, GOLD_INDEX_TRADE, gold);
+        this._addGold(target, GOLD_INDEX_TRADE, gold);
     }
     boatCapturedTrade(player, target, gold) {
-        this._addBoat(player, "trade", StatsSchemas_1.BOAT_INDEX_CAPTURE, 1);
-        this._addGold(player, StatsSchemas_1.GOLD_INDEX_STEAL, gold);
+        this._addBoat(player, "trade", BOAT_INDEX_CAPTURE, 1);
+        this._addGold(player, GOLD_INDEX_STEAL, gold);
     }
     boatDestroyTrade(player, target) {
-        this._addBoat(player, "trade", StatsSchemas_1.BOAT_INDEX_DESTROY, 1);
+        this._addBoat(player, "trade", BOAT_INDEX_DESTROY, 1);
     }
     boatSendTroops(player, target, troops) {
-        this._addBoat(player, "trans", StatsSchemas_1.BOAT_INDEX_SENT, 1);
+        this._addBoat(player, "trans", BOAT_INDEX_SENT, 1);
     }
     boatArriveTroops(player, target, troops) {
-        this._addBoat(player, "trans", StatsSchemas_1.BOAT_INDEX_ARRIVE, 1);
+        this._addBoat(player, "trans", BOAT_INDEX_ARRIVE, 1);
     }
     boatDestroyTroops(player, target, troops) {
-        this._addBoat(player, "trans", StatsSchemas_1.BOAT_INDEX_DESTROY, 1);
+        this._addBoat(player, "trans", BOAT_INDEX_DESTROY, 1);
     }
     bombLaunch(player, target, type) {
-        this._addBomb(player, type, StatsSchemas_1.BOMB_INDEX_LAUNCH, 1);
+        this._addBomb(player, type, BOMB_INDEX_LAUNCH, 1);
     }
     bombLand(player, target, type) {
-        this._addBomb(player, type, StatsSchemas_1.BOMB_INDEX_LAND, 1);
+        this._addBomb(player, type, BOMB_INDEX_LAND, 1);
     }
     bombIntercept(player, type, count) {
-        this._addBomb(player, type, StatsSchemas_1.BOMB_INDEX_INTERCEPT, count);
+        this._addBomb(player, type, BOMB_INDEX_INTERCEPT, count);
     }
     goldWork(player, gold) {
-        this._addGold(player, StatsSchemas_1.GOLD_INDEX_WORK, gold);
+        this._addGold(player, GOLD_INDEX_WORK, gold);
     }
     goldWar(player, captured, gold) {
-        this._addGold(player, StatsSchemas_1.GOLD_INDEX_WAR, gold);
+        this._addGold(player, GOLD_INDEX_WAR, gold);
     }
     unitBuild(player, type) {
-        this._addOtherUnit(player, type, StatsSchemas_1.OTHER_INDEX_BUILT, 1);
+        this._addOtherUnit(player, type, OTHER_INDEX_BUILT, 1);
     }
     unitCapture(player, type) {
-        this._addOtherUnit(player, type, StatsSchemas_1.OTHER_INDEX_CAPTURE, 1);
+        this._addOtherUnit(player, type, OTHER_INDEX_CAPTURE, 1);
     }
     unitUpgrade(player, type) {
-        this._addOtherUnit(player, type, StatsSchemas_1.OTHER_INDEX_UPGRADE, 1);
+        this._addOtherUnit(player, type, OTHER_INDEX_UPGRADE, 1);
     }
     unitDestroy(player, type) {
-        this._addOtherUnit(player, type, StatsSchemas_1.OTHER_INDEX_DESTROY, 1);
+        this._addOtherUnit(player, type, OTHER_INDEX_DESTROY, 1);
     }
     unitLose(player, type) {
-        this._addOtherUnit(player, type, StatsSchemas_1.OTHER_INDEX_LOST, 1);
+        this._addOtherUnit(player, type, OTHER_INDEX_LOST, 1);
     }
 }
-exports.StatsImpl = StatsImpl;

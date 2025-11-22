@@ -1,14 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.GameMapImpl = void 0;
-exports.euclDistFN = euclDistFN;
-exports.manhattanDistFN = manhattanDistFN;
-exports.rectDistFN = rectDistFN;
-exports.isometricDistFN = isometricDistFN;
-exports.hexDistFN = hexDistFN;
-exports.andFN = andFN;
-const Game_1 = require("./Game");
-class GameMapImpl {
+import { Cell, TerrainType } from "./Game";
+export class GameMapImpl {
     // Bit 15 still reserved
     constructor(width, height, terrainData, numLandTiles_) {
         this.numLandTiles_ = numLandTiles_;
@@ -53,7 +44,7 @@ class GameMapImpl {
         return this.refToY[ref];
     }
     cell(ref) {
-        return new Game_1.Cell(this.x(ref), this.y(ref));
+        return new Cell(this.x(ref), this.y(ref));
     }
     width() {
         return this.width_;
@@ -151,12 +142,12 @@ class GameMapImpl {
         if (this.isLand(ref)) {
             const magnitude = this.magnitude(ref);
             if (magnitude < 10)
-                return Game_1.TerrainType.Plains;
+                return TerrainType.Plains;
             if (magnitude < 20)
-                return Game_1.TerrainType.Highland;
-            return Game_1.TerrainType.Mountain;
+                return TerrainType.Highland;
+            return TerrainType.Mountain;
         }
-        return this.isOcean(ref) ? Game_1.TerrainType.Ocean : Game_1.TerrainType.Lake;
+        return this.isOcean(ref) ? TerrainType.Ocean : TerrainType.Lake;
     }
     neighbors(ref) {
         const neighbors = [];
@@ -227,7 +218,6 @@ class GameMapImpl {
         return tileRef;
     }
 }
-exports.GameMapImpl = GameMapImpl;
 // Terrain bits (Uint8Array)
 GameMapImpl.IS_LAND_BIT = 7;
 GameMapImpl.SHORELINE_BIT = 6;
@@ -237,7 +227,7 @@ GameMapImpl.MAGNITUDE_MASK = 0x1f; // 11111 in binary
 GameMapImpl.PLAYER_ID_MASK = 0xfff;
 GameMapImpl.FALLOUT_BIT = 13;
 GameMapImpl.DEFENSE_BONUS_BIT = 14;
-function euclDistFN(root, dist, center = false) {
+export function euclDistFN(root, dist, center = false) {
     const dist2 = dist * dist;
     if (!center) {
         return (gm, n) => gm.euclideanDistSquared(root, n) <= dist2;
@@ -255,7 +245,7 @@ function euclDistFN(root, dist, center = false) {
         };
     }
 }
-function manhattanDistFN(root, dist, center = false) {
+export function manhattanDistFN(root, dist, center = false) {
     if (!center) {
         return (gm, n) => gm.manhattanDist(root, n) <= dist;
     }
@@ -269,7 +259,7 @@ function manhattanDistFN(root, dist, center = false) {
         };
     }
 }
-function rectDistFN(root, dist, center = false) {
+export function rectDistFN(root, dist, center = false) {
     if (!center) {
         return (gm, n) => {
             const dx = Math.abs(gm.x(n) - gm.x(root));
@@ -292,7 +282,7 @@ function isInIsometricTile(center, tile, yOffset, distance) {
     const dy = Math.abs(tile.y - (center.y + yOffset));
     return dx + dy * 2 <= distance + 1;
 }
-function isometricDistFN(root, dist, center = false) {
+export function isometricDistFN(root, dist, center = false) {
     if (!center) {
         return (gm, n) => gm.manhattanDist(root, n) <= dist;
     }
@@ -304,7 +294,7 @@ function isometricDistFN(root, dist, center = false) {
         };
     }
 }
-function hexDistFN(root, dist, center = false) {
+export function hexDistFN(root, dist, center = false) {
     if (!center) {
         return (gm, n) => {
             const dx = Math.abs(gm.x(n) - gm.x(root));
@@ -322,6 +312,6 @@ function hexDistFN(root, dist, center = false) {
         };
     }
 }
-function andFN(x, y) {
+export function andFN(x, y) {
     return (gm, tile) => x(gm, tile) && y(gm, tile);
 }

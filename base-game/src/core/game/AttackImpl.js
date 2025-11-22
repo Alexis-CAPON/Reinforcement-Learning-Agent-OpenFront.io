@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AttackImpl = void 0;
-const Game_1 = require("./Game");
-class AttackImpl {
+import { Cell } from "./Game";
+export class AttackImpl {
     constructor(_id, _target, _attacker, _troops, _sourceTile, _border, _mg) {
         this._id = _id;
         this._target = _target;
@@ -83,7 +80,7 @@ class AttackImpl {
             }
             // No border tiles yet—use the source tile's location
             const tile = this.sourceTile();
-            return new Game_1.Cell(this._mg.map().x(tile), this._mg.map().y(tile));
+            return new Cell(this._mg.map().x(tile), this._mg.map().y(tile));
         }
         let averageX = 0;
         let averageY = 0;
@@ -93,7 +90,6 @@ class AttackImpl {
         }
         averageX = averageX / this._borderSize;
         averageY = averageY / this._borderSize;
-        return new Game_1.Cell(averageX, averageY);
+        return new Cell(averageX, averageY);
     }
 }
-exports.AttackImpl = AttackImpl;

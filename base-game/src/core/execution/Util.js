@@ -1,12 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSpawnTiles = getSpawnTiles;
-exports.closestTwoTiles = closestTwoTiles;
-const GameMap_1 = require("../game/GameMap");
-function getSpawnTiles(gm, tile) {
-    return Array.from(gm.bfs(tile, (0, GameMap_1.euclDistFN)(tile, 4, true))).filter((t) => !gm.hasOwner(t) && gm.isLand(t));
+import { euclDistFN } from "../game/GameMap";
+export function getSpawnTiles(gm, tile) {
+    return Array.from(gm.bfs(tile, euclDistFN(tile, 4, true))).filter((t) => !gm.hasOwner(t) && gm.isLand(t));
 }
-function closestTwoTiles(gm, x, y) {
+export function closestTwoTiles(gm, x, y) {
     const xSorted = Array.from(x).sort((a, b) => gm.x(a) - gm.x(b));
     const ySorted = Array.from(y).sort((a, b) => gm.x(a) - gm.x(b));
     if (xSorted.length === 0 || ySorted.length === 0) {

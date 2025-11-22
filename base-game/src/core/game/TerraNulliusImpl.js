@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TerraNulliusImpl = void 0;
-class TerraNulliusImpl {
+export class TerraNulliusImpl {
     constructor() { }
     smallID() {
         return 0;
@@ -16,4 +13,3 @@ class TerraNulliusImpl {
         return false;
     }
 }
-exports.TerraNulliusImpl = TerraNulliusImpl;

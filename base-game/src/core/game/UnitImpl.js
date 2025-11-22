@@ -1,12 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.UnitImpl = void 0;
-const Util_1 = require("../Util");
-const Game_1 = require("./Game");
-const GameUpdates_1 = require("./GameUpdates");
-class UnitImpl {
+import { simpleHash, toInt, withinInt } from "../Util";
+import { MessageType, UnitType, } from "./Game";
+import { GameUpdateType } from "./GameUpdates";
+export class UnitImpl {
     constructor(_type, mg, _tile, _id, _owner, params = {}) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
         this._type = _type;
         this.mg = mg;
         this._tile = _tile;
@@ -25,29 +21,29 @@ class UnitImpl {
         // Nuke only
         this._trajectoryIndex = 0;
         this._lastTile = _tile;
-        this._health = (0, Util_1.toInt)((_a = this.mg.unitInfo(_type).maxHealth) !== null && _a !== void 0 ? _a : 1);
+        this._health = toInt(this.mg.unitInfo(_type).maxHealth ?? 1);
         this._targetTile =
-            "targetTile" in params ? ((_b = params.targetTile) !== null && _b !== void 0 ? _b : undefined) : undefined;
-        this._trajectory = "trajectory" in params ? ((_c = params.trajectory) !== null && _c !== void 0 ? _c : []) : [];
-        this._troops = "troops" in params ? ((_d = params.troops) !== null && _d !== void 0 ? _d : 0) : 0;
+            "targetTile" in params ? (params.targetTile ?? undefined) : undefined;
+        this._trajectory = "trajectory" in params ? (params.trajectory ?? []) : [];
+        this._troops = "troops" in params ? (params.troops ?? 0) : 0;
         this._lastSetSafeFromPirates =
             "lastSetSafeFromPirates" in params
-                ? ((_e = params.lastSetSafeFromPirates) !== null && _e !== void 0 ? _e : 0)
+                ? (params.lastSetSafeFromPirates ?? 0)
                 : 0;
         this._patrolTile =
-            "patrolTile" in params ? ((_f = params.patrolTile) !== null && _f !== void 0 ? _f : undefined) : undefined;
+            "patrolTile" in params ? (params.patrolTile ?? undefined) : undefined;
         this._targetUnit =
-            "targetUnit" in params ? ((_g = params.targetUnit) !== null && _g !== void 0 ? _g : undefined) : undefined;
+            "targetUnit" in params ? (params.targetUnit ?? undefined) : undefined;
         this._loaded =
-            "loaded" in params ? ((_h = params.loaded) !== null && _h !== void 0 ? _h : undefined) : undefined;
+            "loaded" in params ? (params.loaded ?? undefined) : undefined;
         this._trainType = "trainType" in params ? params.trainType : undefined;
         switch (this._type) {
-            case Game_1.UnitType.Warship:
-            case Game_1.UnitType.Port:
-            case Game_1.UnitType.MissileSilo:
-            case Game_1.UnitType.DefensePost:
-            case Game_1.UnitType.SAMLauncher:
-            case Game_1.UnitType.City:
+            case UnitType.Warship:
+            case UnitType.Port:
+            case UnitType.MissileSilo:
+            case UnitType.DefensePost:
+            case UnitType.SAMLauncher:
+            case UnitType.City:
                 this.mg.stats().unitBuild(_owner, this._type);
         }
     }
@@ -82,14 +78,13 @@ class UnitImpl {
         return this._id;
     }
     toUpdate() {
-        var _a, _b, _c, _d;
         return {
-            type: GameUpdates_1.GameUpdateType.Unit,
+            type: GameUpdateType.Unit,
             unitType: this._type,
             id: this._id,
             troops: this._troops,
             ownerID: this._owner.smallID(),
-            lastOwnerID: (_a = this._lastOwner) === null || _a === void 0 ? void 0 : _a.smallID(),
+            lastOwnerID: this._lastOwner?.smallID(),
             isActive: this._active,
             reachedTarget: this._reachedTarget,
             retreating: this._retreating,
@@ -98,8 +93,8 @@ class UnitImpl {
             lastPos: this._lastTile,
             health: this.hasHealth() ? Number(this._health) : undefined,
             constructionType: this._constructionType,
-            targetUnitId: (_c = (_b = this._targetUnit) === null || _b === void 0 ? void 0 : _b.id()) !== null && _c !== void 0 ? _c : undefined,
-            targetTile: (_d = this.targetTile()) !== null && _d !== void 0 ? _d : undefined,
+            targetUnitId: this._targetUnit?.id() ?? undefined,
+            targetTile: this.targetTile() ?? undefined,
             missileTimerQueue: this._missileTimerQueue,
             level: this.level(),
             hasTrainStation: this._hasTrainStation,
@@ -145,12 +140,12 @@ class UnitImpl {
     }
     setOwner(newOwner) {
         switch (this._type) {
-            case Game_1.UnitType.Warship:
-            case Game_1.UnitType.Port:
-            case Game_1.UnitType.MissileSilo:
-            case Game_1.UnitType.DefensePost:
-            case Game_1.UnitType.SAMLauncher:
-            case Game_1.UnitType.City:
+            case UnitType.Warship:
+            case UnitType.Port:
+            case UnitType.MissileSilo:
+            case UnitType.DefensePost:
+            case UnitType.SAMLauncher:
+            case UnitType.City:
                 this.mg.stats().unitCapture(newOwner, this._type);
                 this.mg.stats().unitLose(this._owner, this._type);
                 break;
@@ -160,12 +155,11 @@ class UnitImpl {
         this._owner = newOwner;
         this._owner._units.push(this);
         this.mg.addUpdate(this.toUpdate());
-        this.mg.displayMessage(`Your ${this.type()} was captured by ${newOwner.displayName()}`, Game_1.MessageType.UNIT_CAPTURED_BY_ENEMY, this._lastOwner.id());
-        this.mg.displayMessage(`Captured ${this.type()} from ${this._lastOwner.displayName()}`, Game_1.MessageType.CAPTURED_ENEMY_UNIT, newOwner.id());
+        this.mg.displayMessage(`Your ${this.type()} was captured by ${newOwner.displayName()}`, MessageType.UNIT_CAPTURED_BY_ENEMY, this._lastOwner.id());
+        this.mg.displayMessage(`Captured ${this.type()} from ${this._lastOwner.displayName()}`, MessageType.CAPTURED_ENEMY_UNIT, newOwner.id());
     }
     modifyHealth(delta, attacker) {
-        var _a;
-        this._health = (0, Util_1.withinInt)(this._health + (0, Util_1.toInt)(delta), 0n, (0, Util_1.toInt)((_a = this.info().maxHealth) !== null && _a !== void 0 ? _a : 1));
+        this._health = withinInt(this._health + toInt(delta), 0n, toInt(this.info().maxHealth ?? 1));
         if (this._health === 0n) {
             this.delete(true, attacker);
         }
@@ -178,26 +172,26 @@ class UnitImpl {
         this._active = false;
         this.mg.addUpdate(this.toUpdate());
         this.mg.removeUnit(this);
-        if (displayMessage !== false && this._type !== Game_1.UnitType.MIRVWarhead) {
-            this.mg.displayMessage(`Your ${this._type} was destroyed`, Game_1.MessageType.UNIT_DESTROYED, this.owner().id());
+        if (displayMessage !== false && this._type !== UnitType.MIRVWarhead) {
+            this.mg.displayMessage(`Your ${this._type} was destroyed`, MessageType.UNIT_DESTROYED, this.owner().id());
         }
         if (destroyer !== undefined) {
             switch (this._type) {
-                case Game_1.UnitType.TransportShip:
+                case UnitType.TransportShip:
                     this.mg
                         .stats()
                         .boatDestroyTroops(destroyer, this._owner, this._troops);
                     break;
-                case Game_1.UnitType.TradeShip:
+                case UnitType.TradeShip:
                     this.mg.stats().boatDestroyTrade(destroyer, this._owner);
                     break;
-                case Game_1.UnitType.City:
-                case Game_1.UnitType.DefensePost:
-                case Game_1.UnitType.MissileSilo:
-                case Game_1.UnitType.Port:
-                case Game_1.UnitType.SAMLauncher:
-                case Game_1.UnitType.Warship:
-                case Game_1.UnitType.Factory:
+                case UnitType.City:
+                case UnitType.DefensePost:
+                case UnitType.MissileSilo:
+                case UnitType.Port:
+                case UnitType.SAMLauncher:
+                case UnitType.Warship:
+                case UnitType.Factory:
                     this.mg.stats().unitDestroy(destroyer, this._type);
                     this.mg.stats().unitLose(this.owner(), this._type);
                     break;
@@ -211,27 +205,26 @@ class UnitImpl {
         return this._retreating;
     }
     orderBoatRetreat() {
-        if (this.type() !== Game_1.UnitType.TransportShip) {
+        if (this.type() !== UnitType.TransportShip) {
             throw new Error(`Cannot retreat ${this.type()}`);
         }
         this._retreating = true;
     }
     constructionType() {
-        var _a;
-        if (this.type() !== Game_1.UnitType.Construction) {
+        if (this.type() !== UnitType.Construction) {
             throw new Error(`Cannot get construction type on ${this.type()}`);
         }
-        return (_a = this._constructionType) !== null && _a !== void 0 ? _a : null;
+        return this._constructionType ?? null;
     }
     setConstructionType(type) {
-        if (this.type() !== Game_1.UnitType.Construction) {
+        if (this.type() !== UnitType.Construction) {
             throw new Error(`Cannot set construction type on ${this.type()}`);
         }
         this._constructionType = type;
         this.mg.addUpdate(this.toUpdate());
     }
     hash() {
-        return this.tile() + (0, Util_1.simpleHash)(this.type()) * this._id;
+        return this.tile() + simpleHash(this.type()) * this._id;
     }
     toString() {
         return `Unit:${this._type},owner:${this.owner().name()}`;
@@ -306,7 +299,7 @@ class UnitImpl {
     }
     increaseLevel() {
         this._level++;
-        if ([Game_1.UnitType.MissileSilo, Game_1.UnitType.SAMLauncher].includes(this.type())) {
+        if ([UnitType.MissileSilo, UnitType.SAMLauncher].includes(this.type())) {
             this._missileTimerQueue.push(this.mg.ticks());
         }
         this.mg.addUpdate(this.toUpdate());
@@ -324,4 +317,3 @@ class UnitImpl {
         }
     }
 }
-exports.UnitImpl = UnitImpl;

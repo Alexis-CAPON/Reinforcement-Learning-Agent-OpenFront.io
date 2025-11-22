@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TestConfig = void 0;
-const DefaultConfig_1 = require("../../src/core/configuration/DefaultConfig");
-class TestConfig extends DefaultConfig_1.DefaultConfig {
+import { DefaultConfig } from "../../src/core/configuration/DefaultConfig";
+export class TestConfig extends DefaultConfig {
     constructor() {
         super(...arguments);
         this._proximityBonusPortsNb = 0;
@@ -46,4 +43,3 @@ class TestConfig extends DefaultConfig_1.DefaultConfig {
         return 1;
     }
 }
-exports.TestConfig = TestConfig;

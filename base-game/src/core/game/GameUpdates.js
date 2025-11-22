@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.RailType = exports.GameUpdateType = void 0;
-var GameUpdateType;
+export var GameUpdateType;
 (function (GameUpdateType) {
     GameUpdateType[GameUpdateType["Tile"] = 0] = "Tile";
     GameUpdateType[GameUpdateType["Unit"] = 1] = "Unit";
@@ -22,8 +19,8 @@ var GameUpdateType;
     GameUpdateType[GameUpdateType["RailroadEvent"] = 16] = "RailroadEvent";
     GameUpdateType[GameUpdateType["ConquestEvent"] = 17] = "ConquestEvent";
     GameUpdateType[GameUpdateType["EmbargoEvent"] = 18] = "EmbargoEvent";
-})(GameUpdateType || (exports.GameUpdateType = GameUpdateType = {}));
-var RailType;
+})(GameUpdateType || (GameUpdateType = {}));
+export var RailType;
 (function (RailType) {
     RailType[RailType["VERTICAL"] = 0] = "VERTICAL";
     RailType[RailType["HORIZONTAL"] = 1] = "HORIZONTAL";
@@ -31,4 +28,4 @@ var RailType;
     RailType[RailType["TOP_RIGHT"] = 3] = "TOP_RIGHT";
     RailType[RailType["BOTTOM_LEFT"] = 4] = "BOTTOM_LEFT";
     RailType[RailType["BOTTOM_RIGHT"] = 5] = "BOTTOM_RIGHT";
-})(RailType || (exports.RailType = RailType = {}));
+})(RailType || (RailType = {}));

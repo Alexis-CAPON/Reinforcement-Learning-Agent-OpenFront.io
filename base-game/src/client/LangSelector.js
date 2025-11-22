@@ -1,4 +1,3 @@
-"use strict";
 var __esDecorate = (this && this.__esDecorate) || function (ctor, descriptorIn, decorators, contextIn, initializers, extraInitializers) {
     function accept(f) { if (f !== void 0 && typeof f !== "function") throw new TypeError("Function expected"); return f; }
     var kind = contextIn.kind, key = kind === "getter" ? "get" : kind === "setter" ? "set" : "value";
@@ -33,61 +32,50 @@ var __runInitializers = (this && this.__runInitializers) || function (thisArg, i
     }
     return useValue ? value : void 0;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __setFunctionName = (this && this.__setFunctionName) || function (f, name, prefix) {
     if (typeof name === "symbol") name = name.description ? "[".concat(name.description, "]") : "";
     return Object.defineProperty(f, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LangSelector = void 0;
-const lit_1 = require("lit");
-const decorators_js_1 = require("lit/decorators.js");
-require("./LanguageModal");
-const ar_json_1 = require("../../resources/lang/ar.json");
-const bg_json_1 = require("../../resources/lang/bg.json");
-const bn_json_1 = require("../../resources/lang/bn.json");
-const cs_json_1 = require("../../resources/lang/cs.json");
-const da_json_1 = require("../../resources/lang/da.json");
-const de_json_1 = require("../../resources/lang/de.json");
-const en_json_1 = require("../../resources/lang/en.json");
-const eo_json_1 = require("../../resources/lang/eo.json");
-const es_json_1 = require("../../resources/lang/es.json");
-const fi_json_1 = require("../../resources/lang/fi.json");
-const fr_json_1 = require("../../resources/lang/fr.json");
-const gl_json_1 = require("../../resources/lang/gl.json");
-const he_json_1 = require("../../resources/lang/he.json");
-const hi_json_1 = require("../../resources/lang/hi.json");
-const hu_json_1 = require("../../resources/lang/hu.json");
-const it_json_1 = require("../../resources/lang/it.json");
-const ja_json_1 = require("../../resources/lang/ja.json");
-const ko_json_1 = require("../../resources/lang/ko.json");
-const nl_json_1 = require("../../resources/lang/nl.json");
-const pl_json_1 = require("../../resources/lang/pl.json");
-const pt_BR_json_1 = require("../../resources/lang/pt-BR.json");
-const pt_PT_json_1 = require("../../resources/lang/pt-PT.json");
-const ru_json_1 = require("../../resources/lang/ru.json");
-const sh_json_1 = require("../../resources/lang/sh.json");
-const sk_json_1 = require("../../resources/lang/sk.json");
-const sl_json_1 = require("../../resources/lang/sl.json");
-const sv_SE_json_1 = require("../../resources/lang/sv-SE.json");
-const tp_json_1 = require("../../resources/lang/tp.json");
-const tr_json_1 = require("../../resources/lang/tr.json");
-const uk_json_1 = require("../../resources/lang/uk.json");
-const zh_CN_json_1 = require("../../resources/lang/zh-CN.json");
+import { LitElement, html } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import "./LanguageModal";
+import ar from "../../resources/lang/ar.json";
+import bg from "../../resources/lang/bg.json";
+import bn from "../../resources/lang/bn.json";
+import cs from "../../resources/lang/cs.json";
+import da from "../../resources/lang/da.json";
+import de from "../../resources/lang/de.json";
+import en from "../../resources/lang/en.json";
+import eo from "../../resources/lang/eo.json";
+import es from "../../resources/lang/es.json";
+import fi from "../../resources/lang/fi.json";
+import fr from "../../resources/lang/fr.json";
+import gl from "../../resources/lang/gl.json";
+import he from "../../resources/lang/he.json";
+import hi from "../../resources/lang/hi.json";
+import hu from "../../resources/lang/hu.json";
+import it from "../../resources/lang/it.json";
+import ja from "../../resources/lang/ja.json";
+import ko from "../../resources/lang/ko.json";
+import nl from "../../resources/lang/nl.json";
+import pl from "../../resources/lang/pl.json";
+import pt_BR from "../../resources/lang/pt-BR.json";
+import pt_PT from "../../resources/lang/pt-PT.json";
+import ru from "../../resources/lang/ru.json";
+import sh from "../../resources/lang/sh.json";
+import sk from "../../resources/lang/sk.json";
+import sl from "../../resources/lang/sl.json";
+import sv_SE from "../../resources/lang/sv-SE.json";
+import tp from "../../resources/lang/tp.json";
+import tr from "../../resources/lang/tr.json";
+import uk from "../../resources/lang/uk.json";
+import zh_CN from "../../resources/lang/zh-CN.json";
 let LangSelector = (() => {
-    let _classDecorators = [(0, decorators_js_1.customElement)("lang-selector")];
+    let _classDecorators = [customElement("lang-selector")];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
-    let _classSuper = lit_1.LitElement;
+    let _classSuper = LitElement;
     let _translations_decorators;
     let _translations_initializers = [];
     let _translations_extraInitializers = [];
@@ -117,37 +105,37 @@ let LangSelector = (() => {
             this.debugMode = (__runInitializers(this, _showModal_extraInitializers), __runInitializers(this, _debugMode_initializers, false));
             this.debugKeyPressed = (__runInitializers(this, _debugMode_extraInitializers), false);
             this.languageMap = {
-                ar: ar_json_1.default,
-                bg: bg_json_1.default,
-                bn: bn_json_1.default,
-                de: de_json_1.default,
-                en: en_json_1.default,
-                es: es_json_1.default,
-                eo: eo_json_1.default,
-                fr: fr_json_1.default,
-                it: it_json_1.default,
-                hi: hi_json_1.default,
-                hu: hu_json_1.default,
-                ja: ja_json_1.default,
-                nl: nl_json_1.default,
-                pl: pl_json_1.default,
-                "pt-PT": pt_PT_json_1.default,
-                "pt-BR": pt_BR_json_1.default,
-                ru: ru_json_1.default,
-                sh: sh_json_1.default,
-                tr: tr_json_1.default,
-                tp: tp_json_1.default,
-                uk: uk_json_1.default,
-                cs: cs_json_1.default,
-                he: he_json_1.default,
-                da: da_json_1.default,
-                fi: fi_json_1.default,
-                "sv-SE": sv_SE_json_1.default,
-                "zh-CN": zh_CN_json_1.default,
-                ko: ko_json_1.default,
-                gl: gl_json_1.default,
-                sl: sl_json_1.default,
-                sk: sk_json_1.default,
+                ar,
+                bg,
+                bn,
+                de,
+                en,
+                es,
+                eo,
+                fr,
+                it,
+                hi,
+                hu,
+                ja,
+                nl,
+                pl,
+                "pt-PT": pt_PT,
+                "pt-BR": pt_BR,
+                ru,
+                sh,
+                tr,
+                tp,
+                uk,
+                cs,
+                he,
+                da,
+                fi,
+                "sv-SE": sv_SE,
+                "zh-CN": zh_CN,
+                ko,
+                gl,
+                sl,
+                sk,
             };
         }
         createRenderRoot() {
@@ -160,13 +148,11 @@ let LangSelector = (() => {
         }
         setupDebugKey() {
             window.addEventListener("keydown", (e) => {
-                var _a;
-                if (((_a = e.key) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === "t")
+                if (e.key?.toLowerCase() === "t")
                     this.debugKeyPressed = true;
             });
             window.addEventListener("keyup", (e) => {
-                var _a;
-                if (((_a = e.key) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === "t")
+                if (e.key?.toLowerCase() === "t")
                     this.debugKeyPressed = false;
             });
         }
@@ -183,80 +169,74 @@ let LangSelector = (() => {
             }
             return "en";
         }
-        initializeLanguage() {
-            return __awaiter(this, void 0, void 0, function* () {
-                const browserLocale = navigator.language;
-                const savedLang = localStorage.getItem("lang");
-                const userLang = this.getClosestSupportedLang(savedLang !== null && savedLang !== void 0 ? savedLang : browserLocale);
-                this.defaultTranslations = this.loadLanguage("en");
-                this.translations = this.loadLanguage(userLang);
-                this.currentLang = userLang;
-                yield this.loadLanguageList();
-                this.applyTranslation();
-            });
+        async initializeLanguage() {
+            const browserLocale = navigator.language;
+            const savedLang = localStorage.getItem("lang");
+            const userLang = this.getClosestSupportedLang(savedLang ?? browserLocale);
+            this.defaultTranslations = this.loadLanguage("en");
+            this.translations = this.loadLanguage(userLang);
+            this.currentLang = userLang;
+            await this.loadLanguageList();
+            this.applyTranslation();
         }
         loadLanguage(lang) {
-            var _a;
-            const language = (_a = this.languageMap[lang]) !== null && _a !== void 0 ? _a : {};
+            const language = this.languageMap[lang] ?? {};
             const flat = flattenTranslations(language);
             return flat;
         }
-        loadLanguageList() {
-            return __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d;
-                try {
-                    const data = this.languageMap;
-                    let list = [];
-                    const browserLang = new Intl.Locale(navigator.language).language;
-                    for (const langCode of Object.keys(data)) {
-                        const langData = data[langCode].lang;
-                        if (!langData)
-                            continue;
-                        list.push({
-                            code: (_a = langData.lang_code) !== null && _a !== void 0 ? _a : langCode,
-                            native: (_b = langData.native) !== null && _b !== void 0 ? _b : langCode,
-                            en: (_c = langData.en) !== null && _c !== void 0 ? _c : langCode,
-                            svg: (_d = langData.svg) !== null && _d !== void 0 ? _d : langCode,
-                        });
-                    }
-                    let debugLang = null;
-                    if (this.debugKeyPressed) {
-                        debugLang = {
-                            code: "debug",
-                            native: "Debug",
-                            en: "Debug",
-                            svg: "xx",
-                        };
-                        this.debugMode = true;
-                    }
-                    const currentLangEntry = list.find((l) => l.code === this.currentLang);
-                    const browserLangEntry = browserLang !== this.currentLang && browserLang !== "en"
-                        ? list.find((l) => l.code === browserLang)
-                        : undefined;
-                    const englishEntry = this.currentLang !== "en"
-                        ? list.find((l) => l.code === "en")
-                        : undefined;
-                    list = list.filter((l) => l.code !== this.currentLang &&
-                        l.code !== browserLang &&
-                        l.code !== "en" &&
-                        l.code !== "debug");
-                    list.sort((a, b) => a.en.localeCompare(b.en));
-                    const finalList = [];
-                    if (currentLangEntry)
-                        finalList.push(currentLangEntry);
-                    if (englishEntry)
-                        finalList.push(englishEntry);
-                    if (browserLangEntry)
-                        finalList.push(browserLangEntry);
-                    finalList.push(...list);
-                    if (debugLang)
-                        finalList.push(debugLang);
-                    this.languageList = finalList;
+        async loadLanguageList() {
+            try {
+                const data = this.languageMap;
+                let list = [];
+                const browserLang = new Intl.Locale(navigator.language).language;
+                for (const langCode of Object.keys(data)) {
+                    const langData = data[langCode].lang;
+                    if (!langData)
+                        continue;
+                    list.push({
+                        code: langData.lang_code ?? langCode,
+                        native: langData.native ?? langCode,
+                        en: langData.en ?? langCode,
+                        svg: langData.svg ?? langCode,
+                    });
                 }
-                catch (err) {
-                    console.error("Failed to load language list:", err);
+                let debugLang = null;
+                if (this.debugKeyPressed) {
+                    debugLang = {
+                        code: "debug",
+                        native: "Debug",
+                        en: "Debug",
+                        svg: "xx",
+                    };
+                    this.debugMode = true;
                 }
-            });
+                const currentLangEntry = list.find((l) => l.code === this.currentLang);
+                const browserLangEntry = browserLang !== this.currentLang && browserLang !== "en"
+                    ? list.find((l) => l.code === browserLang)
+                    : undefined;
+                const englishEntry = this.currentLang !== "en"
+                    ? list.find((l) => l.code === "en")
+                    : undefined;
+                list = list.filter((l) => l.code !== this.currentLang &&
+                    l.code !== browserLang &&
+                    l.code !== "en" &&
+                    l.code !== "debug");
+                list.sort((a, b) => a.en.localeCompare(b.en));
+                const finalList = [];
+                if (currentLangEntry)
+                    finalList.push(currentLangEntry);
+                if (englishEntry)
+                    finalList.push(englishEntry);
+                if (browserLangEntry)
+                    finalList.push(browserLangEntry);
+                finalList.push(...list);
+                if (debugLang)
+                    finalList.push(debugLang);
+                this.languageList = finalList;
+            }
+            catch (err) {
+                console.error("Failed to load language list:", err);
+            }
         }
         changeLanguage(lang) {
             localStorage.setItem("lang", lang);
@@ -266,7 +246,6 @@ let LangSelector = (() => {
             this.showModal = false;
         }
         applyTranslation() {
-            var _a;
             const components = [
                 "single-player-modal",
                 "host-lobby-modal",
@@ -288,7 +267,7 @@ let LangSelector = (() => {
                 "o-button",
                 "territory-patterns-modal",
             ];
-            document.title = (_a = this.translateText("main.title")) !== null && _a !== void 0 ? _a : document.title;
+            document.title = this.translateText("main.title") ?? document.title;
             document.querySelectorAll("[data-i18n]").forEach((element) => {
                 const key = element.getAttribute("data-i18n");
                 if (key === null)
@@ -332,20 +311,20 @@ let LangSelector = (() => {
             this.loadLanguageList();
         }
         render() {
-            var _a;
-            const currentLang = (_a = this.languageList.find((l) => l.code === this.currentLang)) !== null && _a !== void 0 ? _a : (this.currentLang === "debug"
-                ? {
-                    code: "debug",
-                    native: "Debug",
-                    en: "Debug",
-                    svg: "xx",
-                }
-                : {
-                    native: "English",
-                    en: "English",
-                    svg: "uk_us_flag",
-                });
-            return (0, lit_1.html) `
+            const currentLang = this.languageList.find((l) => l.code === this.currentLang) ??
+                (this.currentLang === "debug"
+                    ? {
+                        code: "debug",
+                        native: "Debug",
+                        en: "Debug",
+                        svg: "xx",
+                    }
+                    : {
+                        native: "English",
+                        en: "English",
+                        svg: "uk_us_flag",
+                    });
+            return html `
       <div class="container__row">
         <button
           id="lang-selector"
@@ -374,14 +353,13 @@ let LangSelector = (() => {
     };
     __setFunctionName(_classThis, "LangSelector");
     (() => {
-        var _a;
-        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create((_a = _classSuper[Symbol.metadata]) !== null && _a !== void 0 ? _a : null) : void 0;
-        _translations_decorators = [(0, decorators_js_1.state)()];
-        _defaultTranslations_decorators = [(0, decorators_js_1.state)()];
-        _currentLang_decorators = [(0, decorators_js_1.state)()];
-        _languageList_decorators = [(0, decorators_js_1.state)()];
-        _showModal_decorators = [(0, decorators_js_1.state)()];
-        _debugMode_decorators = [(0, decorators_js_1.state)()];
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(_classSuper[Symbol.metadata] ?? null) : void 0;
+        _translations_decorators = [state()];
+        _defaultTranslations_decorators = [state()];
+        _currentLang_decorators = [state()];
+        _languageList_decorators = [state()];
+        _showModal_decorators = [state()];
+        _debugMode_decorators = [state()];
         __esDecorate(null, null, _translations_decorators, { kind: "field", name: "translations", static: false, private: false, access: { has: obj => "translations" in obj, get: obj => obj.translations, set: (obj, value) => { obj.translations = value; } }, metadata: _metadata }, _translations_initializers, _translations_extraInitializers);
         __esDecorate(null, null, _defaultTranslations_decorators, { kind: "field", name: "defaultTranslations", static: false, private: false, access: { has: obj => "defaultTranslations" in obj, get: obj => obj.defaultTranslations, set: (obj, value) => { obj.defaultTranslations = value; } }, metadata: _metadata }, _defaultTranslations_initializers, _defaultTranslations_extraInitializers);
         __esDecorate(null, null, _currentLang_decorators, { kind: "field", name: "currentLang", static: false, private: false, access: { has: obj => "currentLang" in obj, get: obj => obj.currentLang, set: (obj, value) => { obj.currentLang = value; } }, metadata: _metadata }, _currentLang_initializers, _currentLang_extraInitializers);
@@ -395,7 +373,7 @@ let LangSelector = (() => {
     })();
     return LangSelector = _classThis;
 })();
-exports.LangSelector = LangSelector;
+export { LangSelector };
 function flattenTranslations(obj, parentKey = "", result = {}) {
     for (const key in obj) {
         const value = obj[key];

@@ -1,9 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.OrientedRailroad = exports.Railroad = void 0;
-exports.getOrientedRailroad = getOrientedRailroad;
-const GameUpdates_1 = require("./GameUpdates");
-class Railroad {
+import { GameUpdateType, RailType } from "./GameUpdates";
+export class Railroad {
     constructor(from, to, tiles) {
         this.from = from;
         this.to = to;
@@ -12,10 +8,10 @@ class Railroad {
     delete(game) {
         const railTiles = this.tiles.map((tile) => ({
             tile,
-            railType: GameUpdates_1.RailType.VERTICAL,
+            railType: RailType.VERTICAL,
         }));
         game.addUpdate({
-            type: GameUpdates_1.GameUpdateType.RailroadEvent,
+            type: GameUpdateType.RailroadEvent,
             isActive: false,
             railTiles,
         });
@@ -23,8 +19,7 @@ class Railroad {
         this.to.getRailroads().delete(this);
     }
 }
-exports.Railroad = Railroad;
-function getOrientedRailroad(from, to) {
+export function getOrientedRailroad(from, to) {
     for (const railroad of from.getRailroads()) {
         if (railroad.from === to) {
             return new OrientedRailroad(railroad, false);
@@ -38,7 +33,7 @@ function getOrientedRailroad(from, to) {
 /**
  * Wrap a railroad with a direction so it always starts at tiles[0]
  */
-class OrientedRailroad {
+export class OrientedRailroad {
     constructor(railroad, forward) {
         this.railroad = railroad;
         this.forward = forward;
@@ -57,4 +52,3 @@ class OrientedRailroad {
         return this.forward ? this.railroad.to : this.railroad.from;
     }
 }
-exports.OrientedRailroad = OrientedRailroad;

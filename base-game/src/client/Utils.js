@@ -1,19 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.severityColors = exports.translateText = void 0;
-exports.renderDuration = renderDuration;
-exports.renderTroops = renderTroops;
-exports.renderNumber = renderNumber;
-exports.createCanvas = createCanvas;
-exports.generateCryptoRandomUUID = generateCryptoRandomUUID;
-exports.getMessageTypeClasses = getMessageTypeClasses;
-exports.getModifierKey = getModifierKey;
-exports.getAltKey = getAltKey;
-exports.getGamesPlayed = getGamesPlayed;
-exports.incrementGamesPlayed = incrementGamesPlayed;
-const intl_messageformat_1 = require("intl-messageformat");
-const Game_1 = require("../core/game/Game");
-function renderDuration(totalSeconds) {
+import IntlMessageFormat from "intl-messageformat";
+import { MessageType } from "../core/game/Game";
+export function renderDuration(totalSeconds) {
     if (totalSeconds <= 0)
         return "0s";
     const minutes = Math.floor(totalSeconds / 60);
@@ -24,36 +11,36 @@ function renderDuration(totalSeconds) {
     time += `${seconds}s`;
     return time.trim();
 }
-function renderTroops(troops) {
+export function renderTroops(troops) {
     return renderNumber(troops / 10);
 }
-function renderNumber(num, fixedPoints) {
+export function renderNumber(num, fixedPoints) {
     num = Number(num);
     num = Math.max(num, 0);
     if (num >= 10000000) {
         const value = Math.floor(num / 100000) / 10;
-        return value.toFixed(fixedPoints !== null && fixedPoints !== void 0 ? fixedPoints : 1) + "M";
+        return value.toFixed(fixedPoints ?? 1) + "M";
     }
     else if (num >= 1000000) {
         const value = Math.floor(num / 10000) / 100;
-        return value.toFixed(fixedPoints !== null && fixedPoints !== void 0 ? fixedPoints : 2) + "M";
+        return value.toFixed(fixedPoints ?? 2) + "M";
     }
     else if (num >= 100000) {
         return Math.floor(num / 1000) + "K";
     }
     else if (num >= 10000) {
         const value = Math.floor(num / 100) / 10;
-        return value.toFixed(fixedPoints !== null && fixedPoints !== void 0 ? fixedPoints : 1) + "K";
+        return value.toFixed(fixedPoints ?? 1) + "K";
     }
     else if (num >= 1000) {
         const value = Math.floor(num / 10) / 100;
-        return value.toFixed(fixedPoints !== null && fixedPoints !== void 0 ? fixedPoints : 2) + "K";
+        return value.toFixed(fixedPoints ?? 2) + "K";
     }
     else {
         return Math.floor(num).toString();
     }
 }
-function createCanvas() {
+export function createCanvas() {
     const canvas = document.createElement("canvas");
     // Set canvas style to fill the screen
     canvas.style.position = "fixed";
@@ -68,7 +55,7 @@ function createCanvas() {
  * A polyfill for crypto.randomUUID that provides fallback implementations
  * for older browsers, particularly Safari versions < 15.4
  */
-function generateCryptoRandomUUID() {
+export function generateCryptoRandomUUID() {
     // Type guard to check if randomUUID is available
     if (crypto !== undefined && "randomUUID" in crypto) {
         return crypto.randomUUID();
@@ -86,11 +73,10 @@ function generateCryptoRandomUUID() {
         return v.toString(16);
     });
 }
-const translateText = (key, params = {}) => {
-    var _a, _b;
-    const self = exports.translateText;
-    (_a = self.formatterCache) !== null && _a !== void 0 ? _a : (self.formatterCache = new Map());
-    (_b = self.lastLang) !== null && _b !== void 0 ? _b : (self.lastLang = null);
+export const translateText = (key, params = {}) => {
+    const self = translateText;
+    self.formatterCache ?? (self.formatterCache = new Map());
+    self.lastLang ?? (self.lastLang = null);
     const langSelector = document.querySelector("lang-selector");
     if (!langSelector) {
         console.warn("LangSelector not found in DOM");
@@ -120,7 +106,7 @@ const translateText = (key, params = {}) => {
         const cacheKey = `${key}:${locale}:${message}`;
         let formatter = self.formatterCache.get(cacheKey);
         if (!formatter) {
-            formatter = new intl_messageformat_1.default(message, locale);
+            formatter = new IntlMessageFormat(message, locale);
             self.formatterCache.set(cacheKey, formatter);
         }
         return formatter.format(params);
@@ -130,11 +116,10 @@ const translateText = (key, params = {}) => {
         return message;
     }
 };
-exports.translateText = translateText;
 /**
  * Severity colors mapping for message types
  */
-exports.severityColors = {
+export const severityColors = {
     fail: "text-red-400",
     warn: "text-yellow-400",
     success: "text-green-400",
@@ -147,44 +132,44 @@ exports.severityColors = {
  * @param type The message type to get styling for
  * @returns CSS class string for the message type
  */
-function getMessageTypeClasses(type) {
+export function getMessageTypeClasses(type) {
     switch (type) {
-        case Game_1.MessageType.SAM_HIT:
-        case Game_1.MessageType.CAPTURED_ENEMY_UNIT:
-        case Game_1.MessageType.RECEIVED_GOLD_FROM_TRADE:
-        case Game_1.MessageType.CONQUERED_PLAYER:
-            return exports.severityColors["success"];
-        case Game_1.MessageType.ATTACK_FAILED:
-        case Game_1.MessageType.ALLIANCE_REJECTED:
-        case Game_1.MessageType.ALLIANCE_BROKEN:
-        case Game_1.MessageType.UNIT_CAPTURED_BY_ENEMY:
-        case Game_1.MessageType.UNIT_DESTROYED:
-            return exports.severityColors["fail"];
-        case Game_1.MessageType.ATTACK_CANCELLED:
-        case Game_1.MessageType.ATTACK_REQUEST:
-        case Game_1.MessageType.ALLIANCE_ACCEPTED:
-        case Game_1.MessageType.SENT_GOLD_TO_PLAYER:
-        case Game_1.MessageType.SENT_TROOPS_TO_PLAYER:
-        case Game_1.MessageType.RECEIVED_GOLD_FROM_PLAYER:
-        case Game_1.MessageType.RECEIVED_TROOPS_FROM_PLAYER:
-            return exports.severityColors["blue"];
-        case Game_1.MessageType.MIRV_INBOUND:
-        case Game_1.MessageType.NUKE_INBOUND:
-        case Game_1.MessageType.HYDROGEN_BOMB_INBOUND:
-        case Game_1.MessageType.SAM_MISS:
-        case Game_1.MessageType.ALLIANCE_EXPIRED:
-        case Game_1.MessageType.NAVAL_INVASION_INBOUND:
-        case Game_1.MessageType.RENEW_ALLIANCE:
-            return exports.severityColors["warn"];
-        case Game_1.MessageType.CHAT:
-        case Game_1.MessageType.ALLIANCE_REQUEST:
-            return exports.severityColors["info"];
+        case MessageType.SAM_HIT:
+        case MessageType.CAPTURED_ENEMY_UNIT:
+        case MessageType.RECEIVED_GOLD_FROM_TRADE:
+        case MessageType.CONQUERED_PLAYER:
+            return severityColors["success"];
+        case MessageType.ATTACK_FAILED:
+        case MessageType.ALLIANCE_REJECTED:
+        case MessageType.ALLIANCE_BROKEN:
+        case MessageType.UNIT_CAPTURED_BY_ENEMY:
+        case MessageType.UNIT_DESTROYED:
+            return severityColors["fail"];
+        case MessageType.ATTACK_CANCELLED:
+        case MessageType.ATTACK_REQUEST:
+        case MessageType.ALLIANCE_ACCEPTED:
+        case MessageType.SENT_GOLD_TO_PLAYER:
+        case MessageType.SENT_TROOPS_TO_PLAYER:
+        case MessageType.RECEIVED_GOLD_FROM_PLAYER:
+        case MessageType.RECEIVED_TROOPS_FROM_PLAYER:
+            return severityColors["blue"];
+        case MessageType.MIRV_INBOUND:
+        case MessageType.NUKE_INBOUND:
+        case MessageType.HYDROGEN_BOMB_INBOUND:
+        case MessageType.SAM_MISS:
+        case MessageType.ALLIANCE_EXPIRED:
+        case MessageType.NAVAL_INVASION_INBOUND:
+        case MessageType.RENEW_ALLIANCE:
+            return severityColors["warn"];
+        case MessageType.CHAT:
+        case MessageType.ALLIANCE_REQUEST:
+            return severityColors["info"];
         default:
             console.warn(`Message type ${type} has no explicit color`);
-            return exports.severityColors["white"];
+            return severityColors["white"];
     }
 }
-function getModifierKey() {
+export function getModifierKey() {
     const isMac = /Mac/.test(navigator.userAgent);
     if (isMac) {
         return "⌘"; // Command key
@@ -193,7 +178,7 @@ function getModifierKey() {
         return "Ctrl";
     }
 }
-function getAltKey() {
+export function getAltKey() {
     const isMac = /Mac/.test(navigator.userAgent);
     if (isMac) {
         return "⌥"; // Option key
@@ -202,17 +187,16 @@ function getAltKey() {
         return "Alt";
     }
 }
-function getGamesPlayed() {
-    var _a;
+export function getGamesPlayed() {
     try {
-        return parseInt((_a = localStorage.getItem("gamesPlayed")) !== null && _a !== void 0 ? _a : "0", 10) || 0;
+        return parseInt(localStorage.getItem("gamesPlayed") ?? "0", 10) || 0;
     }
     catch (error) {
         console.warn("Failed to read games played from localStorage:", error);
         return 0;
     }
 }
-function incrementGamesPlayed() {
+export function incrementGamesPlayed() {
     try {
         localStorage.setItem("gamesPlayed", (getGamesPlayed() + 1).toString());
     }

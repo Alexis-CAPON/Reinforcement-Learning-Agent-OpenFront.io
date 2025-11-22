@@ -1,23 +1,20 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlayerImpl = void 0;
-const Utils_1 = require("../../client/Utils");
-const PseudoRandom_1 = require("../PseudoRandom");
-const Util_1 = require("../Util");
-const username_1 = require("../validations/username");
-const AttackImpl_1 = require("./AttackImpl");
-const Game_1 = require("./Game");
-const GameMap_1 = require("./GameMap");
-const GameUpdates_1 = require("./GameUpdates");
-const TransportShipUtils_1 = require("./TransportShipUtils");
-const UnitImpl_1 = require("./UnitImpl");
+import { renderNumber, renderTroops } from "../../client/Utils";
+import { PseudoRandom } from "../PseudoRandom";
+import { assertNever, distSortUnit, minInt, simpleHash, toInt, within, } from "../Util";
+import { sanitizeUsername } from "../validations/username";
+import { AttackImpl } from "./AttackImpl";
+import { AllPlayers, ColoredTeams, GameMode, GameType, MessageType, PlayerType, Relation, UnitType, } from "./Game";
+import { andFN, manhattanDistFN } from "./GameMap";
+import { GameUpdateType, } from "./GameUpdates";
+import { bestShoreDeploymentSource, canBuildTransportShip, } from "./TransportShipUtils";
+import { UnitImpl } from "./UnitImpl";
 class Donation {
     constructor(recipient, tick) {
         this.recipient = recipient;
         this.tick = tick;
     }
 }
-class PlayerImpl {
+export class PlayerImpl {
     constructor(mg, _smallID, playerInfo, startTroops, _team) {
         this.mg = mg;
         this._smallID = _smallID;
@@ -42,23 +39,22 @@ class PlayerImpl {
         this._hasSpawned = false;
         this._isDisconnected = false;
         this.numUnitsConstructed = {};
-        this._name = (0, username_1.sanitizeUsername)(playerInfo.name);
-        this._troops = (0, Util_1.toInt)(startTroops);
+        this._name = sanitizeUsername(playerInfo.name);
+        this._troops = toInt(startTroops);
         this._gold = 0n;
         this._displayName = this._name;
-        this._pseudo_random = new PseudoRandom_1.PseudoRandom((0, Util_1.simpleHash)(this.playerInfo.id));
+        this._pseudo_random = new PseudoRandom(simpleHash(this.playerInfo.id));
     }
     toUpdate() {
-        var _a;
         const outgoingAllianceRequests = this.outgoingAllianceRequests().map((ar) => ar.recipient().id());
         const stats = this.mg.stats().getPlayerStats(this);
         return {
-            type: GameUpdates_1.GameUpdateType.Player,
+            type: GameUpdateType.Player,
             clientID: this.clientID(),
             name: this.name(),
             displayName: this.displayName(),
             id: this.id(),
-            team: (_a = this.team()) !== null && _a !== void 0 ? _a : undefined,
+            team: this.team() ?? undefined,
             smallID: this.smallID(),
             playerType: this.type(),
             isAlive: this.isAlive(),
@@ -97,7 +93,7 @@ class PlayerImpl {
                 expiresAt: a.expiresAt(),
             })),
             hasSpawned: this.hasSpawned(),
-            betrayals: stats === null || stats === void 0 ? void 0 : stats.betrayals,
+            betrayals: stats?.betrayals,
         };
     }
     smallID() {
@@ -138,11 +134,10 @@ class PlayerImpl {
     }
     // Count of units built by the player, including construction
     unitsConstructed(type) {
-        var _a;
-        const built = (_a = this.numUnitsConstructed[type]) !== null && _a !== void 0 ? _a : 0;
+        const built = this.numUnitsConstructed[type] ?? 0;
         let constructing = 0;
         for (const unit of this._units) {
-            if (unit.type() !== Game_1.UnitType.Construction)
+            if (unit.type() !== UnitType.Construction)
                 continue;
             if (unit.constructionType() !== type)
                 continue;
@@ -169,7 +164,7 @@ class PlayerImpl {
                 total += unit.level();
                 continue;
             }
-            if (unit.type() !== Game_1.UnitType.Construction)
+            if (unit.type() !== UnitType.Construction)
                 continue;
             if (unit.constructionType() !== type)
                 continue;
@@ -214,7 +209,7 @@ class PlayerImpl {
         return true;
     }
     setTroops(troops) {
-        this._troops = (0, Util_1.toInt)(troops);
+        this._troops = toInt(troops);
     }
     conquer(tile) {
         this.mg.conquer(this, tile);
@@ -275,11 +270,10 @@ class PlayerImpl {
         return this.allianceWith(other) !== null;
     }
     allianceWith(other) {
-        var _a;
         if (other === this) {
             return null;
         }
-        return ((_a = this.alliances().find((a) => a.recipient() === other || a.requestor() === other)) !== null && _a !== void 0 ? _a : null);
+        return (this.alliances().find((a) => a.recipient() === other || a.requestor() === other) ?? null);
     }
     canSendAllianceRequest(other) {
         if (other === this) {
@@ -321,24 +315,23 @@ class PlayerImpl {
         return this.mg.createAllianceRequest(this, recipient);
     }
     relation(other) {
-        var _a;
         if (other === this) {
             throw new Error(`cannot get relation with self: ${this}`);
         }
-        const relation = (_a = this.relations.get(other)) !== null && _a !== void 0 ? _a : 0;
+        const relation = this.relations.get(other) ?? 0;
         return this.relationFromValue(relation);
     }
     relationFromValue(relationValue) {
         if (relationValue < -50) {
-            return Game_1.Relation.Hostile;
+            return Relation.Hostile;
         }
         if (relationValue < 0) {
-            return Game_1.Relation.Distrustful;
+            return Relation.Distrustful;
         }
         if (relationValue < 50) {
-            return Game_1.Relation.Neutral;
+            return Relation.Neutral;
         }
-        return Game_1.Relation.Friendly;
+        return Relation.Friendly;
     }
     allRelationsSorted() {
         return Array.from(this.relations, ([k, v]) => ({ player: k, relation: v }))
@@ -349,12 +342,11 @@ class PlayerImpl {
         }));
     }
     updateRelation(other, delta) {
-        var _a;
         if (other === this) {
             throw new Error(`cannot update relation with self: ${this}`);
         }
-        const relation = (_a = this.relations.get(other)) !== null && _a !== void 0 ? _a : 0;
-        const newRelation = (0, Util_1.within)(relation + delta, -100, 100);
+        const relation = this.relations.get(other) ?? 0;
+        const newRelation = within(relation + delta, -100, 100);
         this.relations.set(other, newRelation);
     }
     decayRelations() {
@@ -405,7 +397,7 @@ class PlayerImpl {
         const msg = {
             message: emoji,
             senderID: this.smallID(),
-            recipientID: recipient === Game_1.AllPlayers ? recipient : recipient.smallID(),
+            recipientID: recipient === AllPlayers ? recipient : recipient.smallID(),
             createdAt: this.mg.ticks(),
         };
         this.outgoingEmojis_.push(msg);
@@ -421,7 +413,7 @@ class PlayerImpl {
         if (recipient === this) {
             return false;
         }
-        const recipientID = recipient === Game_1.AllPlayers ? Game_1.AllPlayers : recipient.smallID();
+        const recipientID = recipient === AllPlayers ? AllPlayers : recipient.smallID();
         const prevMsgs = this.outgoingEmojis_.filter((msg) => msg.recipientID === recipientID);
         for (const msg of prevMsgs) {
             if (this.mg.ticks() - msg.createdAt <
@@ -435,9 +427,9 @@ class PlayerImpl {
         if (!this.isFriendly(recipient)) {
             return false;
         }
-        if (recipient.type() === Game_1.PlayerType.Human &&
-            this.mg.config().gameConfig().gameMode === Game_1.GameMode.FFA &&
-            this.mg.config().gameConfig().gameType === Game_1.GameType.Public) {
+        if (recipient.type() === PlayerType.Human &&
+            this.mg.config().gameConfig().gameMode === GameMode.FFA &&
+            this.mg.config().gameConfig().gameType === GameType.Public) {
             return false;
         }
         if (this.mg.config().donateGold() === false) {
@@ -457,9 +449,9 @@ class PlayerImpl {
         if (!this.isFriendly(recipient)) {
             return false;
         }
-        if (recipient.type() === Game_1.PlayerType.Human &&
-            this.mg.config().gameConfig().gameMode === Game_1.GameMode.FFA &&
-            this.mg.config().gameConfig().gameType === Game_1.GameType.Public) {
+        if (recipient.type() === PlayerType.Human &&
+            this.mg.config().gameConfig().gameMode === GameMode.FFA &&
+            this.mg.config().gameConfig().gameType === GameType.Public) {
             return false;
         }
         if (this.mg.config().donateTroops() === false) {
@@ -483,8 +475,8 @@ class PlayerImpl {
             return false;
         recipient.addTroops(removed);
         this.sentDonations.push(new Donation(recipient, this.mg.ticks()));
-        this.mg.displayMessage(`Sent ${(0, Utils_1.renderTroops)(troops)} troops to ${recipient.name()}`, Game_1.MessageType.SENT_TROOPS_TO_PLAYER, this.id());
-        this.mg.displayMessage(`Received ${(0, Utils_1.renderTroops)(troops)} troops from ${this.name()}`, Game_1.MessageType.RECEIVED_TROOPS_FROM_PLAYER, recipient.id());
+        this.mg.displayMessage(`Sent ${renderTroops(troops)} troops to ${recipient.name()}`, MessageType.SENT_TROOPS_TO_PLAYER, this.id());
+        this.mg.displayMessage(`Received ${renderTroops(troops)} troops from ${this.name()}`, MessageType.RECEIVED_TROOPS_FROM_PLAYER, recipient.id());
         return true;
     }
     donateGold(recipient, gold) {
@@ -495,8 +487,8 @@ class PlayerImpl {
             return false;
         recipient.addGold(removed);
         this.sentDonations.push(new Donation(recipient, this.mg.ticks()));
-        this.mg.displayMessage(`Sent ${(0, Utils_1.renderNumber)(gold)} gold to ${recipient.name()}`, Game_1.MessageType.SENT_GOLD_TO_PLAYER, this.id());
-        this.mg.displayMessage(`Received ${(0, Utils_1.renderNumber)(gold)} gold from ${this.name()}`, Game_1.MessageType.RECEIVED_GOLD_FROM_PLAYER, recipient.id(), gold);
+        this.mg.displayMessage(`Sent ${renderNumber(gold)} gold to ${recipient.name()}`, MessageType.SENT_GOLD_TO_PLAYER, this.id());
+        this.mg.displayMessage(`Received ${renderNumber(gold)} gold from ${this.name()}`, MessageType.RECEIVED_GOLD_FROM_PLAYER, recipient.id(), gold);
         return true;
     }
     canDeleteUnit() {
@@ -521,7 +513,7 @@ class PlayerImpl {
         if (embargo !== undefined && !embargo.isTemporary)
             return;
         this.mg.addUpdate({
-            type: GameUpdates_1.GameUpdateType.EmbargoEvent,
+            type: GameUpdateType.EmbargoEvent,
             event: "start",
             playerID: this.smallID(),
             embargoedID: other.smallID(),
@@ -535,7 +527,7 @@ class PlayerImpl {
     stopEmbargo(other) {
         this.embargoes.delete(other.id());
         this.mg.addUpdate({
-            type: GameUpdates_1.GameUpdateType.EmbargoEvent,
+            type: GameUpdateType.EmbargoEvent,
             event: "stop",
             playerID: this.smallID(),
             embargoedID: other.smallID(),
@@ -562,7 +554,7 @@ class PlayerImpl {
         if (this.team() === null || other.team() === null) {
             return false;
         }
-        if (this.team() === Game_1.ColoredTeams.Bot || other.team() === Game_1.ColoredTeams.Bot) {
+        if (this.team() === ColoredTeams.Bot || other.team() === ColoredTeams.Bot) {
             return false;
         }
         return this._team === other.team();
@@ -577,7 +569,7 @@ class PlayerImpl {
         this._gold += toAdd;
         if (tile) {
             this.mg.addUpdate({
-                type: GameUpdates_1.GameUpdateType.BonusEvent,
+                type: GameUpdateType.BonusEvent,
                 player: this.id(),
                 tile,
                 gold: Number(toAdd),
@@ -589,7 +581,7 @@ class PlayerImpl {
         if (toRemove <= 0n) {
             return 0n;
         }
-        const actualRemoved = (0, Util_1.minInt)(this._gold, toRemove);
+        const actualRemoved = minInt(this._gold, toRemove);
         this._gold -= actualRemoved;
         return actualRemoved;
     }
@@ -601,13 +593,13 @@ class PlayerImpl {
             this.removeTroops(-1 * troops);
             return;
         }
-        this._troops += (0, Util_1.toInt)(troops);
+        this._troops += toInt(troops);
     }
     removeTroops(troops) {
         if (troops <= 0) {
             return 0;
         }
-        const toRemove = (0, Util_1.minInt)(this._troops, (0, Util_1.toInt)(troops));
+        const toRemove = minInt(this._troops, toInt(troops));
         this._troops -= toRemove;
         return Number(toRemove);
     }
@@ -618,16 +610,15 @@ class PlayerImpl {
         unit.setOwner(this);
     }
     buildUnit(type, spawnTile, params) {
-        var _a;
         if (this.mg.config().isUnitDisabled(type)) {
             throw new Error(`Attempted to build disabled unit ${type} at tile ${spawnTile} by player ${this.name()}`);
         }
         const cost = this.mg.unitInfo(type).cost(this);
-        const b = new UnitImpl_1.UnitImpl(type, this.mg, spawnTile, this.mg.nextUnitID(), this, params);
+        const b = new UnitImpl(type, this.mg, spawnTile, this.mg.nextUnitID(), this, params);
         this._units.push(b);
         this.recordUnitConstructed(type);
         this.removeGold(cost);
-        this.removeTroops("troops" in params ? ((_a = params.troops) !== null && _a !== void 0 ? _a : 0) : 0);
+        this.removeTroops("troops" in params ? (params.troops ?? 0) : 0);
         this.mg.addUpdate(b.toUpdate());
         this.mg.addUnit(b);
         return b;
@@ -666,7 +657,7 @@ class PlayerImpl {
     }
     buildableUnits(tile) {
         const validTiles = this.validStructureSpawnTiles(tile);
-        return Object.values(Game_1.UnitType).map((u) => {
+        return Object.values(UnitType).map((u) => {
             let canUpgrade = false;
             if (!this.mg.inSpawnPhase()) {
                 const existingUnit = this.findUnitToUpgrade(u, tile);
@@ -693,38 +684,38 @@ class PlayerImpl {
             return false;
         }
         switch (unitType) {
-            case Game_1.UnitType.MIRV:
+            case UnitType.MIRV:
                 if (!this.mg.hasOwner(targetTile)) {
                     return false;
                 }
                 return this.nukeSpawn(targetTile);
-            case Game_1.UnitType.AtomBomb:
-            case Game_1.UnitType.HydrogenBomb:
+            case UnitType.AtomBomb:
+            case UnitType.HydrogenBomb:
                 return this.nukeSpawn(targetTile);
-            case Game_1.UnitType.MIRVWarhead:
+            case UnitType.MIRVWarhead:
                 return targetTile;
-            case Game_1.UnitType.Port:
+            case UnitType.Port:
                 return this.portSpawn(targetTile, validTiles);
-            case Game_1.UnitType.Warship:
+            case UnitType.Warship:
                 return this.warshipSpawn(targetTile);
-            case Game_1.UnitType.Shell:
-            case Game_1.UnitType.SAMMissile:
+            case UnitType.Shell:
+            case UnitType.SAMMissile:
                 return targetTile;
-            case Game_1.UnitType.TransportShip:
-                return (0, TransportShipUtils_1.canBuildTransportShip)(this.mg, this, targetTile);
-            case Game_1.UnitType.TradeShip:
+            case UnitType.TransportShip:
+                return canBuildTransportShip(this.mg, this, targetTile);
+            case UnitType.TradeShip:
                 return this.tradeShipSpawn(targetTile);
-            case Game_1.UnitType.Train:
+            case UnitType.Train:
                 return this.landBasedUnitSpawn(targetTile);
-            case Game_1.UnitType.MissileSilo:
-            case Game_1.UnitType.DefensePost:
-            case Game_1.UnitType.SAMLauncher:
-            case Game_1.UnitType.City:
-            case Game_1.UnitType.Factory:
-            case Game_1.UnitType.Construction:
+            case UnitType.MissileSilo:
+            case UnitType.DefensePost:
+            case UnitType.SAMLauncher:
+            case UnitType.City:
+            case UnitType.Factory:
+            case UnitType.Construction:
                 return this.landBasedStructureSpawn(targetTile, validTiles);
             default:
-                (0, Util_1.assertNever)(unitType);
+                assertNever(unitType);
         }
     }
     nukeSpawn(tile) {
@@ -735,21 +726,21 @@ class PlayerImpl {
             }
         }
         // only get missilesilos that are not on cooldown
-        const spawns = this.units(Game_1.UnitType.MissileSilo)
+        const spawns = this.units(UnitType.MissileSilo)
             .filter((silo) => {
             return !silo.isInCooldown();
         })
-            .sort((0, Util_1.distSortUnit)(this.mg, tile));
+            .sort(distSortUnit(this.mg, tile));
         if (spawns.length === 0) {
             return false;
         }
         return spawns[0].tile();
     }
     portSpawn(tile, validTiles) {
-        const spawns = Array.from(this.mg.bfs(tile, (0, GameMap_1.manhattanDistFN)(tile, this.mg.config().radiusPortSpawn())))
+        const spawns = Array.from(this.mg.bfs(tile, manhattanDistFN(tile, this.mg.config().radiusPortSpawn())))
             .filter((t) => this.mg.owner(t) === this && this.mg.isOceanShore(t))
             .sort((a, b) => this.mg.manhattanDist(a, tile) - this.mg.manhattanDist(b, tile));
-        const validTileSet = new Set(validTiles !== null && validTiles !== void 0 ? validTiles : this.validStructureSpawnTiles(tile));
+        const validTileSet = new Set(validTiles ?? this.validStructureSpawnTiles(tile));
         for (const t of spawns) {
             if (validTileSet.has(t)) {
                 return t;
@@ -761,7 +752,7 @@ class PlayerImpl {
         if (!this.mg.isOcean(tile)) {
             return false;
         }
-        const spawns = this.units(Game_1.UnitType.Port).sort((a, b) => this.mg.manhattanDist(a.tile(), tile) -
+        const spawns = this.units(UnitType.Port).sort((a, b) => this.mg.manhattanDist(a.tile(), tile) -
             this.mg.manhattanDist(b.tile(), tile));
         if (spawns.length === 0) {
             return false;
@@ -772,7 +763,7 @@ class PlayerImpl {
         return this.mg.isLand(tile) ? tile : false;
     }
     landBasedStructureSpawn(tile, validTiles = null) {
-        const tiles = validTiles !== null && validTiles !== void 0 ? validTiles : this.validStructureSpawnTiles(tile);
+        const tiles = validTiles ?? this.validStructureSpawnTiles(tile);
         if (tiles.length === 0) {
             return false;
         }
@@ -783,8 +774,8 @@ class PlayerImpl {
             return [];
         }
         const searchRadius = 15;
-        const searchRadiusSquared = Math.pow(searchRadius, 2);
-        const types = Object.values(Game_1.UnitType).filter((unitTypeValue) => {
+        const searchRadiusSquared = searchRadius ** 2;
+        const types = Object.values(UnitType).filter((unitTypeValue) => {
             return this.mg.config().unitInfo(unitTypeValue).territoryBound;
         });
         const nearbyUnits = this.mg.nearbyUnits(tile, searchRadius * 2, types);
@@ -793,7 +784,7 @@ class PlayerImpl {
                 gm.ownerID(t) === this.smallID());
         });
         const validSet = new Set(nearbyTiles);
-        const minDistSquared = Math.pow(this.mg.config().structureMinDist(), 2);
+        const minDistSquared = this.mg.config().structureMinDist() ** 2;
         for (const t of nearbyTiles) {
             for (const { unit } of nearbyUnits) {
                 if (this.mg.euclideanDistSquared(unit.tile(), t) < minDistSquared) {
@@ -808,7 +799,7 @@ class PlayerImpl {
         return valid;
     }
     tradeShipSpawn(targetTile) {
-        const spawns = this.units(Game_1.UnitType.Port).filter((u) => u.tile() === targetTile);
+        const spawns = this.units(UnitType.Port).filter((u) => u.tile() === targetTile);
         if (spawns.length === 0) {
             return false;
         }
@@ -824,7 +815,7 @@ class PlayerImpl {
         this._isDisconnected = isDisconnected;
     }
     hash() {
-        return ((0, Util_1.simpleHash)(this.id()) * (this.troops() + this.numTilesOwned()) +
+        return (simpleHash(this.id()) * (this.troops() + this.numTilesOwned()) +
             this._units.reduce((acc, unit) => acc + unit.hash(), 0));
     }
     toString() {
@@ -841,7 +832,7 @@ class PlayerImpl {
         return rel;
     }
     createAttack(target, troops, sourceTile, border) {
-        const attack = new AttackImpl_1.AttackImpl(this._pseudo_random.nextID(), target, this, troops, sourceTile, border, this.mg);
+        const attack = new AttackImpl(this._pseudo_random.nextID(), target, this, troops, sourceTile, border, this.mg);
         this._outgoingAttacks.push(attack);
         if (target.isPlayer()) {
             target._incomingAttacks.push(attack);
@@ -877,7 +868,7 @@ class PlayerImpl {
             return this.sharesBorderWith(other);
         }
         else {
-            for (const t of this.mg.bfs(tile, (0, GameMap_1.andFN)((gm, t) => !gm.hasOwner(t) && gm.isLand(t), (0, GameMap_1.manhattanDistFN)(tile, 200)))) {
+            for (const t of this.mg.bfs(tile, andFN((gm, t) => !gm.hasOwner(t) && gm.isLand(t), manhattanDistFN(tile, 200)))) {
                 for (const n of this.mg.neighbors(t)) {
                     if (this.mg.owner(n) === this) {
                         return true;
@@ -888,7 +879,7 @@ class PlayerImpl {
         }
     }
     bestTransportShipSpawn(targetTile) {
-        return (0, TransportShipUtils_1.bestShoreDeploymentSource)(this.mg, this, targetTile);
+        return bestShoreDeploymentSource(this.mg, this, targetTile);
     }
     // It's a probability list, so if an element appears twice it's because it's
     // twice more likely to be picked later.
@@ -896,7 +887,7 @@ class PlayerImpl {
         const ports = this.mg
             .players()
             .filter((p) => p !== port.owner() && p.canTrade(port.owner()))
-            .flatMap((p) => p.units(Game_1.UnitType.Port))
+            .flatMap((p) => p.units(UnitType.Port))
             .sort((p1, p2) => {
             return (this.mg.manhattanDist(port.tile(), p1.tile()) -
                 this.mg.manhattanDist(port.tile(), p2.tile()));
@@ -915,4 +906,3 @@ class PlayerImpl {
         return weightedPorts;
     }
 }
-exports.PlayerImpl = PlayerImpl;

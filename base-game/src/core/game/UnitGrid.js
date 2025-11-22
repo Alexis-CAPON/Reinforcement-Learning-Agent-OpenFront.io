@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.UnitGrid = void 0;
-class UnitGrid {
+export class UnitGrid {
     constructor(gm) {
         this.gm = gm;
         this.cellSize = 100;
@@ -142,4 +139,3 @@ class UnitGrid {
         return false;
     }
 }
-exports.UnitGrid = UnitGrid;

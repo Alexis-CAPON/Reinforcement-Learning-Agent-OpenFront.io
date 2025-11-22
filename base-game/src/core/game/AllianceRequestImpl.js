@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AllianceRequestImpl = void 0;
-const GameUpdates_1 = require("./GameUpdates");
-class AllianceRequestImpl {
+import { GameUpdateType } from "./GameUpdates";
+export class AllianceRequestImpl {
     constructor(requestor_, recipient_, tickCreated, game) {
         this.requestor_ = requestor_;
         this.recipient_ = recipient_;
@@ -32,11 +29,10 @@ class AllianceRequestImpl {
     }
     toUpdate() {
         return {
-            type: GameUpdates_1.GameUpdateType.AllianceRequest,
+            type: GameUpdateType.AllianceRequest,
             requestorID: this.requestor_.smallID(),
             recipientID: this.recipient_.smallID(),
             createdAt: this.tickCreated,
         };
     }
 }
-exports.AllianceRequestImpl = AllianceRequestImpl;

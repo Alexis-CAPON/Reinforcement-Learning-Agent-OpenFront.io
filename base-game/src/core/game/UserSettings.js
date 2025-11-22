@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserSettings = void 0;
 const PATTERN_KEY = "territoryPattern";
-class UserSettings {
+export class UserSettings {
     get(key, defaultValue) {
         const value = localStorage.getItem(key);
         if (!value)
@@ -92,12 +89,10 @@ class UserSettings {
     }
     // For development only. Used for testing patterns, set in the console manually.
     getDevOnlyPattern() {
-        var _a;
-        return (_a = localStorage.getItem("dev-pattern")) !== null && _a !== void 0 ? _a : undefined;
+        return localStorage.getItem("dev-pattern") ?? undefined;
     }
     getSelectedPatternName() {
-        var _a;
-        return (_a = localStorage.getItem(PATTERN_KEY)) !== null && _a !== void 0 ? _a : undefined;
+        return localStorage.getItem(PATTERN_KEY) ?? undefined;
     }
     setSelectedPatternName(patternName) {
         if (patternName === undefined) {
@@ -108,4 +103,3 @@ class UserSettings {
         }
     }
 }
-exports.UserSettings = UserSettings;

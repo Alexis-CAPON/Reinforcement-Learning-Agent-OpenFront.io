@@ -1,15 +1,11 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.RailNetworkImpl = exports.StationManagerImpl = void 0;
-exports.createRailNetwork = createRailNetwork;
-const RailroadExecution_1 = require("../execution/RailroadExecution");
-const AStar_1 = require("../pathfinding/AStar");
-const MiniAStar_1 = require("../pathfinding/MiniAStar");
-const SerialAStar_1 = require("../pathfinding/SerialAStar");
-const Game_1 = require("./Game");
-const Railroad_1 = require("./Railroad");
-const TrainStation_1 = require("./TrainStation");
-class StationManagerImpl {
+import { RailroadExecution } from "../execution/RailroadExecution";
+import { PathFindResultType } from "../pathfinding/AStar";
+import { MiniAStar } from "../pathfinding/MiniAStar";
+import { SerialAStar } from "../pathfinding/SerialAStar";
+import { UnitType } from "./Game";
+import { Railroad } from "./Railroad";
+import { Cluster, TrainStationMapAdapter } from "./TrainStation";
+export class StationManagerImpl {
     constructor() {
         this.stations = new Set();
     }
@@ -30,30 +26,29 @@ class StationManagerImpl {
         return this.stations;
     }
 }
-exports.StationManagerImpl = StationManagerImpl;
 class RailPathFinderServiceImpl {
     constructor(game) {
         this.game = game;
     }
     findTilePath(from, to) {
-        const astar = new MiniAStar_1.MiniAStar(this.game.map(), this.game.miniMap(), from, to, 5000, 20, false, 3);
-        return astar.compute() === AStar_1.PathFindResultType.Completed
+        const astar = new MiniAStar(this.game.map(), this.game.miniMap(), from, to, 5000, 20, false, 3);
+        return astar.compute() === PathFindResultType.Completed
             ? astar.reconstructPath()
             : [];
     }
     findStationsPath(from, to) {
-        const stationAStar = new SerialAStar_1.SerialAStar(from, to, 5000, 20, new TrainStation_1.TrainStationMapAdapter(this.game));
-        return stationAStar.compute() === AStar_1.PathFindResultType.Completed
+        const stationAStar = new SerialAStar(from, to, 5000, 20, new TrainStationMapAdapter(this.game));
+        return stationAStar.compute() === PathFindResultType.Completed
             ? stationAStar.reconstructPath()
             : [];
     }
 }
-function createRailNetwork(game) {
+export function createRailNetwork(game) {
     const stationManager = new StationManagerImpl();
     const pathService = new RailPathFinderServiceImpl(game);
     return new RailNetworkImpl(game, stationManager, pathService);
 }
-class RailNetworkImpl {
+export class RailNetworkImpl {
     constructor(game, stationManager, pathService) {
         this.game = game;
         this.stationManager = stationManager;
@@ -80,7 +75,7 @@ class RailNetworkImpl {
         else if (neighbors.length > 1) {
             for (const neighbor of neighbors) {
                 const stations = this.computeCluster(neighbor);
-                const newCluster = new TrainStation_1.Cluster();
+                const newCluster = new Cluster();
                 newCluster.addStations(stations);
             }
         }
@@ -93,7 +88,7 @@ class RailNetworkImpl {
         return this.pathService.findStationsPath(from, to);
     }
     connectToNearbyStations(station) {
-        const neighbors = this.game.nearbyUnits(station.tile(), this.game.config().trainStationMaxRange(), [Game_1.UnitType.City, Game_1.UnitType.Factory, Game_1.UnitType.Port]);
+        const neighbors = this.game.nearbyUnits(station.tile(), this.game.config().trainStationMaxRange(), [UnitType.City, UnitType.Factory, UnitType.Port]);
         const editedClusters = new Set();
         neighbors.sort((a, b) => a.distSquared - b.distSquared);
         for (const neighbor of neighbors) {
@@ -109,7 +104,7 @@ class RailNetworkImpl {
             const connectionAvailable = distanceToStation > this.maxConnectionDistance ||
                 distanceToStation === -1;
             if (connectionAvailable &&
-                neighbor.distSquared > Math.pow(this.game.config().trainStationMinRange(), 2)) {
+                neighbor.distSquared > this.game.config().trainStationMinRange() ** 2) {
                 if (this.connect(station, neighborStation)) {
                     neighborCluster.addStation(station);
                     editedClusters.add(neighborCluster);
@@ -122,7 +117,7 @@ class RailNetworkImpl {
         }
         else if (editedClusters.size === 0) {
             // If no cluster owns the station, creates a new one for it
-            const newCluster = new TrainStation_1.Cluster();
+            const newCluster = new Cluster();
             newCluster.addStation(station);
         }
     }
@@ -145,8 +140,8 @@ class RailNetworkImpl {
     connect(from, to) {
         const path = this.pathService.findTilePath(from.tile(), to.tile());
         if (path.length > 0 && path.length < this.game.config().railroadMaxSize()) {
-            const railRoad = new Railroad_1.Railroad(from, to, path);
-            this.game.addExecution(new RailroadExecution_1.RailroadExecution(railRoad));
+            const railRoad = new Railroad(from, to, path);
+            this.game.addExecution(new RailroadExecution(railRoad));
             from.addRailroad(railRoad);
             to.addRailroad(railRoad);
             return true;
@@ -194,10 +189,9 @@ class RailNetworkImpl {
         return visited;
     }
     mergeClusters(clustersToMerge) {
-        const merged = new TrainStation_1.Cluster();
+        const merged = new Cluster();
         for (const cluster of clustersToMerge) {
             merged.merge(cluster);
         }
     }
 }
-exports.RailNetworkImpl = RailNetworkImpl;

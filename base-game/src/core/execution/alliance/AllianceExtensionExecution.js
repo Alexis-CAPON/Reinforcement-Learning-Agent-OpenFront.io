@@ -1,8 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AllianceExtensionExecution = void 0;
-const Game_1 = require("../../game/Game");
-class AllianceExtensionExecution {
+import { MessageType, } from "../../game/Game";
+export class AllianceExtensionExecution {
     constructor(from, toID) {
         this.from = from;
         this.toID = toID;
@@ -26,8 +23,8 @@ class AllianceExtensionExecution {
         alliance.addExtensionRequest(this.from);
         if (alliance.bothAgreedToExtend()) {
             alliance.extend();
-            mg.displayMessage("events_display.alliance_renewed", Game_1.MessageType.ALLIANCE_ACCEPTED, this.from.id(), undefined, { name: to.displayName() });
-            mg.displayMessage("events_display.alliance_renewed", Game_1.MessageType.ALLIANCE_ACCEPTED, this.toID, undefined, { name: this.from.displayName() });
+            mg.displayMessage("events_display.alliance_renewed", MessageType.ALLIANCE_ACCEPTED, this.from.id(), undefined, { name: to.displayName() });
+            mg.displayMessage("events_display.alliance_renewed", MessageType.ALLIANCE_ACCEPTED, this.toID, undefined, { name: this.from.displayName() });
         }
     }
     tick(ticks) {
@@ -40,4 +37,3 @@ class AllianceExtensionExecution {
         return false;
     }
 }
-exports.AllianceExtensionExecution = AllianceExtensionExecution;

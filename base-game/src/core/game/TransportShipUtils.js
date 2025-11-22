@@ -1,17 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.canBuildTransportShip = canBuildTransportShip;
-exports.sourceDstOceanShore = sourceDstOceanShore;
-exports.targetTransportTile = targetTransportTile;
-exports.closestShoreFromPlayer = closestShoreFromPlayer;
-exports.bestShoreDeploymentSource = bestShoreDeploymentSource;
-exports.candidateShoreTiles = candidateShoreTiles;
-const AStar_1 = require("../pathfinding/AStar");
-const MiniAStar_1 = require("../pathfinding/MiniAStar");
-const Game_1 = require("./Game");
-const GameMap_1 = require("./GameMap");
-function canBuildTransportShip(game, player, tile) {
-    if (player.unitCount(Game_1.UnitType.TransportShip) >= game.config().boatMaxNumber()) {
+import { PathFindResultType } from "../pathfinding/AStar";
+import { MiniAStar } from "../pathfinding/MiniAStar";
+import { UnitType } from "./Game";
+import { andFN, manhattanDistFN } from "./GameMap";
+export function canBuildTransportShip(game, player, tile) {
+    if (player.unitCount(UnitType.TransportShip) >= game.config().boatMaxNumber()) {
         return false;
     }
     const dst = targetTransportTile(game, tile);
@@ -54,7 +46,7 @@ function canBuildTransportShip(game, player, tile) {
     }
     // Now we are boating in a lake, so do a bfs from target until we find
     // a border tile owned by the player
-    const tiles = game.bfs(dst, (0, GameMap_1.andFN)((0, GameMap_1.manhattanDistFN)(dst, 300), (_, t) => game.isLake(t) || game.isShore(t)));
+    const tiles = game.bfs(dst, andFN(manhattanDistFN(dst, 300), (_, t) => game.isLake(t) || game.isShore(t)));
     const sorted = Array.from(tiles).sort((a, b) => game.manhattanDist(dst, a) - game.manhattanDist(dst, b));
     for (const t of sorted) {
         if (game.owner(t) === player) {
@@ -73,7 +65,7 @@ function transportShipSpawn(game, player, targetTile) {
     }
     return spawn;
 }
-function sourceDstOceanShore(gm, src, tile) {
+export function sourceDstOceanShore(gm, src, tile) {
     const dst = gm.owner(tile);
     const srcTile = closestShoreFromPlayer(gm, src, tile);
     let dstTile = null;
@@ -85,7 +77,7 @@ function sourceDstOceanShore(gm, src, tile) {
     }
     return [srcTile, dstTile];
 }
-function targetTransportTile(gm, tile) {
+export function targetTransportTile(gm, tile) {
     const dst = gm.playerBySmallID(gm.ownerID(tile));
     let dstTile = null;
     if (dst.isPlayer()) {
@@ -96,7 +88,7 @@ function targetTransportTile(gm, tile) {
     }
     return dstTile;
 }
-function closestShoreFromPlayer(gm, player, target) {
+export function closestShoreFromPlayer(gm, player, target) {
     const shoreTiles = Array.from(player.borderTiles()).filter((t) => gm.isShore(t));
     if (shoreTiles.length === 0) {
         return null;
@@ -107,14 +99,14 @@ function closestShoreFromPlayer(gm, player, target) {
         return currentDistance < closestDistance ? current : closest;
     });
 }
-function bestShoreDeploymentSource(gm, player, target) {
+export function bestShoreDeploymentSource(gm, player, target) {
     const t = targetTransportTile(gm, target);
     if (t === null)
         return false;
     const candidates = candidateShoreTiles(gm, player, t);
-    const aStar = new MiniAStar_1.MiniAStar(gm, gm.miniMap(), candidates, t, 1000000, 1);
+    const aStar = new MiniAStar(gm, gm.miniMap(), candidates, t, 1000000, 1);
     const result = aStar.compute();
-    if (result !== AStar_1.PathFindResultType.Completed) {
+    if (result !== PathFindResultType.Completed) {
         console.warn(`bestShoreDeploymentSource: path not found: ${result}`);
         return false;
     }
@@ -133,7 +125,7 @@ function bestShoreDeploymentSource(gm, player, target) {
     }
     return neighbors[0];
 }
-function candidateShoreTiles(gm, player, target) {
+export function candidateShoreTiles(gm, player, target) {
     let closestManhattanDistance = Infinity;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     let bestByManhattan = null;
@@ -184,7 +176,7 @@ function candidateShoreTiles(gm, player, target) {
     return candidates;
 }
 function closestShoreTN(gm, tile, searchDist) {
-    const tn = Array.from(gm.bfs(tile, (0, GameMap_1.andFN)((_, t) => !gm.hasOwner(t), (0, GameMap_1.manhattanDistFN)(tile, searchDist))))
+    const tn = Array.from(gm.bfs(tile, andFN((_, t) => !gm.hasOwner(t), manhattanDistFN(tile, searchDist))))
         .filter((t) => gm.isShore(t))
         .sort((a, b) => gm.manhattanDist(tile, a) - gm.manhattanDist(tile, b));
     if (tn.length === 0) {

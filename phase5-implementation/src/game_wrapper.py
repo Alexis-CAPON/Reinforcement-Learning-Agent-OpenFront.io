@@ -80,6 +80,15 @@ class GameState:
         self.can_build_silo = data.get('can_build_silo', False)
         self.can_build_sam = data.get('can_build_sam', False)
 
+        # Unit positions for spatial observations
+        self.our_cities_positions = data.get('our_cities_positions', [])
+        self.our_ports_positions = data.get('our_ports_positions', [])
+        self.our_silos_positions = data.get('our_silos_positions', [])
+        self.our_sam_positions = data.get('our_sam_positions', [])
+        self.our_defense_positions = data.get('our_defense_positions', [])
+        self.our_factories_positions = data.get('our_factories_positions', [])
+        self.enemy_buildings_positions = data.get('enemy_buildings_positions', [])
+
         # Compute derived features
         self._compute_derived_features()
 
@@ -208,13 +217,28 @@ class GameWrapper:
 
             response = json.loads(response_line)
 
+            # Check for failures
             if not response.get('success', False):
                 error = response.get('error', 'Unknown error')
+                command_type = command.get('type', '')
+
+                # Expected failures for build/nuke actions (not enough resources, etc.)
+                # These are normal game states, not errors
+                if command_type in ['build_unit', 'launch_nuke']:
+                    logger.debug(f"{command_type} action failed: {error}")
+                    return response  # Return response with success=false, caller handles it
+
+                # Actual errors for other command types
+                logger.error(f"Game bridge error for {command_type}: {error}")
                 raise RuntimeError(f"Game bridge error: {error}")
 
             return response
 
+        except RuntimeError:
+            # Re-raise RuntimeError (already logged above or actual communication issue)
+            raise
         except Exception as e:
+            # Log other exceptions (JSON parsing, I/O errors, etc.)
             logger.error(f"Communication error: {e}")
             raise
 

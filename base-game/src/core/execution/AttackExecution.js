@@ -1,12 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AttackExecution = void 0;
-const Utils_1 = require("../../client/Utils");
-const Game_1 = require("../game/Game");
-const PseudoRandom_1 = require("../PseudoRandom");
-const FlatBinaryHeap_1 = require("./utils/FlatBinaryHeap"); // adjust path if needed
+import { renderTroops } from "../../client/Utils";
+import { MessageType, PlayerType, TerrainType, } from "../game/Game";
+import { PseudoRandom } from "../PseudoRandom";
+import { FlatBinaryHeap } from "./utils/FlatBinaryHeap"; // adjust path if needed
 const malusForRetreat = 25;
-class AttackExecution {
+export class AttackExecution {
     constructor(startTroops = null, _owner, _targetID, sourceTile = null, removeTroops = true) {
         this.startTroops = startTroops;
         this._owner = _owner;
@@ -16,8 +13,8 @@ class AttackExecution {
         this.breakAlliance = false;
         this.wasAlliedAtInit = false; // Store alliance state at initialization
         this.active = true;
-        this.toConquer = new FlatBinaryHeap_1.FlatBinaryHeap();
-        this.random = new PseudoRandom_1.PseudoRandom(123);
+        this.toConquer = new FlatBinaryHeap();
+        this.random = new PseudoRandom(123);
         this.attack = null;
     }
     targetID() {
@@ -27,7 +24,6 @@ class AttackExecution {
         return false;
     }
     init(mg, ticks) {
-        var _a;
         if (!this.active) {
             return;
         }
@@ -48,8 +44,8 @@ class AttackExecution {
         }
         if (this.target && this.target.isPlayer()) {
             const targetPlayer = this.target;
-            if (targetPlayer.type() !== Game_1.PlayerType.Bot &&
-                this._owner.type() !== Game_1.PlayerType.Bot) {
+            if (targetPlayer.type() !== PlayerType.Bot &&
+                this._owner.type() !== PlayerType.Bot) {
                 // Don't let bots embargo since they can't trade anyway.
                 targetPlayer.addEmbargo(this._owner, true);
                 this.rejectIncomingAllianceRequests(targetPlayer);
@@ -69,7 +65,7 @@ class AttackExecution {
                 return;
             }
         }
-        (_a = this.startTroops) !== null && _a !== void 0 ? _a : (this.startTroops = this.mg
+        this.startTroops ?? (this.startTroops = this.mg
             .config()
             .attackAmount(this._owner, this.target));
         if (this.removeTroops) {
@@ -134,7 +130,7 @@ class AttackExecution {
         }
         const deaths = this.attack.troops() * (malusPercent / 100);
         if (deaths) {
-            this.mg.displayMessage(`Attack cancelled, ${(0, Utils_1.renderTroops)(deaths)} soldiers killed during retreat.`, Game_1.MessageType.ATTACK_CANCELLED, this._owner.id());
+            this.mg.displayMessage(`Attack cancelled, ${renderTroops(deaths)} soldiers killed during retreat.`, MessageType.ATTACK_CANCELLED, this._owner.id());
         }
         const survivors = this.attack.troops() - deaths;
         this._owner.addTroops(survivors);
@@ -252,13 +248,13 @@ class AttackExecution {
             }
             let mag = 0;
             switch (this.mg.terrainType(neighbor)) {
-                case Game_1.TerrainType.Plains:
+                case TerrainType.Plains:
                     mag = 1;
                     break;
-                case Game_1.TerrainType.Highland:
+                case TerrainType.Highland:
                     mag = 1.5;
                     break;
-                case Game_1.TerrainType.Mountain:
+                case TerrainType.Mountain:
                     mag = 2;
                     break;
             }
@@ -298,4 +294,3 @@ class AttackExecution {
         return this.active;
     }
 }
-exports.AttackExecution = AttackExecution;

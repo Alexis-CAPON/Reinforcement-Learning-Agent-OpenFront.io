@@ -1,25 +1,13 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.GameView = exports.PlayerView = exports.UnitView = void 0;
-const jose_1 = require("jose");
-const PatternDecoder_1 = require("../PatternDecoder");
-const Util_1 = require("../Util");
-const Game_1 = require("./Game");
-const GameUpdates_1 = require("./GameUpdates");
-const TerraNulliusImpl_1 = require("./TerraNulliusImpl");
-const UnitGrid_1 = require("./UnitGrid");
-const UserSettings_1 = require("./UserSettings");
-const userSettings = new UserSettings_1.UserSettings();
-class UnitView {
+import { base64url } from "jose";
+import { PatternDecoder } from "../PatternDecoder";
+import { createRandomName } from "../Util";
+import { UnitType, } from "./Game";
+import { GameUpdateType, } from "./GameUpdates";
+import { TerraNulliusImpl } from "./TerraNulliusImpl";
+import { UnitGrid } from "./UnitGrid";
+import { UserSettings } from "./UserSettings";
+const userSettings = new UserSettings();
+export class UnitView {
     constructor(gameView, data) {
         this.gameView = gameView;
         this.data = data;
@@ -61,7 +49,7 @@ class UnitView {
         return this.data.troops;
     }
     retreating() {
-        if (this.type() !== Game_1.UnitType.TransportShip) {
+        if (this.type() !== UnitType.TransportShip) {
             throw Error("Must be a transport ship");
         }
         return this.data.retreating;
@@ -82,8 +70,7 @@ class UnitView {
         return this.data.health !== undefined;
     }
     health() {
-        var _a;
-        return (_a = this.data.health) !== null && _a !== void 0 ? _a : 0;
+        return this.data.health ?? 0;
     }
     constructionType() {
         return this.data.constructionType;
@@ -108,7 +95,7 @@ class UnitView {
             return 0;
         }
         let readiness = missilesReady / maxMissiles;
-        const cooldownDuration = this.data.unitType === Game_1.UnitType.SAMLauncher
+        const cooldownDuration = this.data.unitType === UnitType.SAMLauncher
             ? this.gameView.config().SAMCooldown()
             : this.gameView.config().SiloCooldown();
         for (const cooldown of this.data.missileTimerQueue) {
@@ -132,8 +119,7 @@ class UnitView {
         return this.data.loaded;
     }
 }
-exports.UnitView = UnitView;
-class PlayerView {
+export class PlayerView {
     constructor(game, data, nameData, cosmetics) {
         this.game = game;
         this.data = data;
@@ -144,25 +130,21 @@ class PlayerView {
             this.anonymousName = this.data.name;
         }
         else {
-            this.anonymousName = (0, Util_1.createRandomName)(this.data.name, this.data.playerType);
+            this.anonymousName = createRandomName(this.data.name, this.data.playerType);
         }
         this.decoder =
             this.cosmetics.pattern === undefined
                 ? undefined
-                : new PatternDecoder_1.PatternDecoder(this.cosmetics.pattern, jose_1.base64url.decode);
+                : new PatternDecoder(this.cosmetics.pattern, base64url.decode);
     }
     patternDecoder() {
         return this.decoder;
     }
-    actions(tile) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.game.worker.playerInteraction(this.id(), this.game.x(tile), this.game.y(tile));
-        });
+    async actions(tile) {
+        return this.game.worker.playerInteraction(this.id(), this.game.x(tile), this.game.y(tile));
     }
-    borderTiles() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.game.worker.playerBorderTiles(this.id());
-        });
+    async borderTiles() {
+        return this.game.worker.playerBorderTiles(this.id());
     }
     outgoingAttacks() {
         return this.data.outgoingAttacks;
@@ -170,10 +152,8 @@ class PlayerView {
     incomingAttacks() {
         return this.data.incomingAttacks;
     }
-    attackAveragePosition(playerID, attackID) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.game.worker.attackAveragePosition(playerID, attackID);
-        });
+    async attackAveragePosition(playerID, attackID) {
+        return this.game.worker.attackAveragePosition(playerID, attackID);
     }
     units(...types) {
         return this.game
@@ -203,8 +183,7 @@ class PlayerView {
         return this.data.id;
     }
     team() {
-        var _a;
-        return (_a = this.data.team) !== null && _a !== void 0 ? _a : null;
+        return this.data.team ?? null;
     }
     type() {
         return this.data.playerType;
@@ -281,8 +260,7 @@ class PlayerView {
         return true;
     }
 }
-exports.PlayerView = PlayerView;
-class GameView {
+export class GameView {
     constructor(worker, _config, _mapData, _myClientID, _gameID, humans) {
         this.worker = worker;
         this._config = _config;
@@ -300,7 +278,7 @@ class GameView {
         this._cosmetics = new Map();
         this._map = this._mapData.gameMap;
         this.lastUpdate = null;
-        this.unitGrid = new UnitGrid_1.UnitGrid(this._map);
+        this.unitGrid = new UnitGrid(this._map);
         this._cosmetics = new Map(this.humans.map((h) => [
             h.clientID,
             { flag: h.flag, pattern: h.pattern },
@@ -316,8 +294,7 @@ class GameView {
         return this._map.isOnEdgeOfMap(ref);
     }
     updatesSinceLastTick() {
-        var _a, _b;
-        return (_b = (_a = this.lastUpdate) === null || _a === void 0 ? void 0 : _a.updates) !== null && _b !== void 0 ? _b : null;
+        return this.lastUpdate?.updates ?? null;
     }
     update(gu) {
         this.toDelete.forEach((id) => this._units.delete(id));
@@ -330,8 +307,7 @@ class GameView {
         if (gu.updates === null) {
             throw new Error("lastUpdate.updates not initialized");
         }
-        gu.updates[GameUpdates_1.GameUpdateType.Player].forEach((pu) => {
-            var _a, _b, _c;
+        gu.updates[GameUpdateType.Player].forEach((pu) => {
             this.smallIDToID.set(pu.smallID, pu.id);
             const player = this._players.get(pu.id);
             if (player !== undefined) {
@@ -341,14 +317,16 @@ class GameView {
             else {
                 this._players.set(pu.id, new PlayerView(this, pu, gu.playerNameViewData[pu.id], 
                 // First check human by clientID, then check nation by name.
-                (_c = (_b = this._cosmetics.get((_a = pu.clientID) !== null && _a !== void 0 ? _a : "")) !== null && _b !== void 0 ? _b : this._cosmetics.get(pu.name)) !== null && _c !== void 0 ? _c : {}));
+                this._cosmetics.get(pu.clientID ?? "") ??
+                    this._cosmetics.get(pu.name) ??
+                    {}));
             }
         });
         for (const unit of this._units.values()) {
             unit._wasUpdated = false;
             unit.lastPos = unit.lastPos.slice(-1);
         }
-        gu.updates[GameUpdates_1.GameUpdateType.Unit].forEach((update) => {
+        gu.updates[GameUpdateType.Unit].forEach((update) => {
             let unit = this._units.get(update.id);
             if (unit !== undefined) {
                 unit.update(update);
@@ -383,8 +361,7 @@ class GameView {
         return this._myClientID;
     }
     myPlayer() {
-        var _a;
-        (_a = this._myPlayer) !== null && _a !== void 0 ? _a : (this._myPlayer = this.playerByClientID(this._myClientID));
+        this._myPlayer ?? (this._myPlayer = this.playerByClientID(this._myClientID));
         return this._myPlayer;
     }
     player(id) {
@@ -399,7 +376,7 @@ class GameView {
     }
     playerBySmallID(id) {
         if (id === 0) {
-            return new TerraNulliusImpl_1.TerraNulliusImpl();
+            return new TerraNulliusImpl();
         }
         const playerId = this.smallIDToID.get(id);
         if (playerId === undefined) {
@@ -408,8 +385,7 @@ class GameView {
         return this.player(playerId);
     }
     playerByClientID(id) {
-        var _a;
-        const player = (_a = Array.from(this._players.values()).filter((p) => p.clientID() === id)[0]) !== null && _a !== void 0 ? _a : null;
+        const player = Array.from(this._players.values()).filter((p) => p.clientID() === id)[0] ?? null;
         if (player === null) {
             return null;
         }
@@ -557,4 +533,3 @@ class GameView {
         this._focusedPlayer = player;
     }
 }
-exports.GameView = GameView;

@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SerialAStar = void 0;
-const fastpriorityqueue_1 = require("fastpriorityqueue");
-const AStar_1 = require("./AStar");
-class SerialAStar {
+import FastPriorityQueue from "fastpriorityqueue";
+import { PathFindResultType } from "./AStar";
+export class SerialAStar {
     constructor(src, dst, iterations, maxTries, graph, directionChangePenalty = 0) {
         this.dst = dst;
         this.iterations = iterations;
@@ -16,8 +13,8 @@ class SerialAStar {
         this.bwdGScore = new Map();
         this.meetingPoint = null;
         this.completed = false;
-        this.fwdOpenSet = new fastpriorityqueue_1.default((a, b) => a.fScore < b.fScore);
-        this.bwdOpenSet = new fastpriorityqueue_1.default((a, b) => a.fScore < b.fScore);
+        this.fwdOpenSet = new FastPriorityQueue((a, b) => a.fScore < b.fScore);
+        this.bwdOpenSet = new FastPriorityQueue((a, b) => a.fScore < b.fScore);
         this.sources = Array.isArray(src) ? src : [src];
         this.closestSource = this.findClosestSource(dst);
         // Initialize forward search with source point(s)
@@ -42,16 +39,16 @@ class SerialAStar {
     }
     compute() {
         if (this.completed)
-            return AStar_1.PathFindResultType.Completed;
+            return PathFindResultType.Completed;
         this.maxTries -= 1;
         let iterations = this.iterations;
         while (!this.fwdOpenSet.isEmpty() && !this.bwdOpenSet.isEmpty()) {
             iterations--;
             if (iterations <= 0) {
                 if (this.maxTries <= 0) {
-                    return AStar_1.PathFindResultType.PathNotFound;
+                    return PathFindResultType.PathNotFound;
                 }
-                return AStar_1.PathFindResultType.Pending;
+                return PathFindResultType.Pending;
             }
             // Process forward search
             const fwdCurrent = this.fwdOpenSet.poll().tile;
@@ -59,7 +56,7 @@ class SerialAStar {
             if (this.bwdGScore.has(fwdCurrent)) {
                 this.meetingPoint = fwdCurrent;
                 this.completed = true;
-                return AStar_1.PathFindResultType.Completed;
+                return PathFindResultType.Completed;
             }
             this.expandNode(fwdCurrent, true);
             // Process backward search
@@ -68,13 +65,13 @@ class SerialAStar {
             if (this.fwdGScore.has(bwdCurrent)) {
                 this.meetingPoint = bwdCurrent;
                 this.completed = true;
-                return AStar_1.PathFindResultType.Completed;
+                return PathFindResultType.Completed;
             }
             this.expandNode(bwdCurrent, false);
         }
         return this.completed
-            ? AStar_1.PathFindResultType.Completed
-            : AStar_1.PathFindResultType.PathNotFound;
+            ? PathFindResultType.Completed
+            : PathFindResultType.PathNotFound;
     }
     expandNode(current, isForward) {
         for (const neighbor of this.graph.neighbors(current)) {
@@ -138,4 +135,3 @@ class SerialAStar {
         return fwdPath;
     }
 }
-exports.SerialAStar = SerialAStar;

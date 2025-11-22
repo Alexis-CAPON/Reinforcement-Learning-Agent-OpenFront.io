@@ -1,9 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TrainExecution = void 0;
-const Game_1 = require("../game/Game");
-const Railroad_1 = require("../game/Railroad");
-class TrainExecution {
+import { TrainType, UnitType, } from "../game/Game";
+import { getOrientedRailroad } from "../game/Railroad";
+export class TrainExecution {
     constructor(railNetwork, player, source, destination, numCars) {
         this.railNetwork = railNetwork;
         this.player = player;
@@ -33,7 +30,7 @@ class TrainExecution {
             return;
         }
         this.stations = stations;
-        const railroad = (0, Railroad_1.getOrientedRailroad)(this.stations[0], this.stations[1]);
+        const railroad = getOrientedRailroad(this.stations[0], this.stations[1]);
         if (railroad) {
             this.currentRailroad = railroad;
         }
@@ -41,7 +38,7 @@ class TrainExecution {
             this.active = false;
             return;
         }
-        const spawn = this.player.canBuild(Game_1.UnitType.Train, this.stations[0].tile());
+        const spawn = this.player.canBuild(UnitType.Train, this.stations[0].tile());
         if (spawn === false) {
             console.warn(`cannot build train`);
             this.active = false;
@@ -86,27 +83,26 @@ class TrainExecution {
         });
     }
     createTrainUnits(tile) {
-        const train = this.player.buildUnit(Game_1.UnitType.Train, tile, {
+        const train = this.player.buildUnit(UnitType.Train, tile, {
             targetUnit: this.destination.unit,
-            trainType: Game_1.TrainType.Engine,
+            trainType: TrainType.Engine,
         });
         // Tail is also an engine, just for cosmetics
-        this.cars.push(this.player.buildUnit(Game_1.UnitType.Train, tile, {
+        this.cars.push(this.player.buildUnit(UnitType.Train, tile, {
             targetUnit: this.destination.unit,
-            trainType: Game_1.TrainType.Engine,
+            trainType: TrainType.Engine,
         }));
         for (let i = 0; i < this.numCars; i++) {
-            this.cars.push(this.player.buildUnit(Game_1.UnitType.Train, tile, {
-                trainType: Game_1.TrainType.Carriage,
+            this.cars.push(this.player.buildUnit(UnitType.Train, tile, {
+                trainType: TrainType.Carriage,
                 loaded: this.hasCargo,
             }));
         }
         return train;
     }
     deleteTrain() {
-        var _a;
         this.active = false;
-        if ((_a = this.train) === null || _a === void 0 ? void 0 : _a.isActive()) {
+        if (this.train?.isActive()) {
             this.train.delete(false);
         }
         for (const car of this.cars) {
@@ -156,7 +152,7 @@ class TrainExecution {
     nextStation() {
         if (this.stations.length > 2) {
             this.stations.shift();
-            const railRoad = (0, Railroad_1.getOrientedRailroad)(this.stations[0], this.stations[1]);
+            const railRoad = getOrientedRailroad(this.stations[0], this.stations[1]);
             if (railRoad) {
                 this.currentRailroad = railRoad;
                 return true;
@@ -199,4 +195,3 @@ class TrainExecution {
         return false;
     }
 }
-exports.TrainExecution = TrainExecution;

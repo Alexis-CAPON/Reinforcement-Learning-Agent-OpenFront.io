@@ -1,21 +1,15 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MESSAGE_TYPE_CATEGORIES = exports.MessageCategory = exports.MessageType = exports.PlayerInfo = exports.PlayerType = exports.TerrainType = exports.Cell = exports.Nation = exports.Relation = exports.nukeTypes = exports.TrainType = exports.UnitType = exports.GameMode = exports.GameType = exports.mapCategories = exports.GameMapType = exports.ColoredTeams = exports.Quads = exports.Trios = exports.Duos = exports.Difficulty = exports.AllPlayers = void 0;
-exports.isStructureType = isStructureType;
-exports.isUnit = isUnit;
-exports.getMessageCategory = getMessageCategory;
-exports.AllPlayers = "AllPlayers";
-var Difficulty;
+export const AllPlayers = "AllPlayers";
+export var Difficulty;
 (function (Difficulty) {
     Difficulty["Easy"] = "Easy";
     Difficulty["Medium"] = "Medium";
     Difficulty["Hard"] = "Hard";
     Difficulty["Impossible"] = "Impossible";
-})(Difficulty || (exports.Difficulty = Difficulty = {}));
-exports.Duos = "Duos";
-exports.Trios = "Trios";
-exports.Quads = "Quads";
-exports.ColoredTeams = {
+})(Difficulty || (Difficulty = {}));
+export const Duos = "Duos";
+export const Trios = "Trios";
+export const Quads = "Quads";
+export const ColoredTeams = {
     Red: "Red",
     Blue: "Blue",
     Teal: "Teal",
@@ -25,7 +19,7 @@ exports.ColoredTeams = {
     Green: "Green",
     Bot: "Bot",
 };
-var GameMapType;
+export var GameMapType;
 (function (GameMapType) {
     GameMapType["World"] = "World";
     GameMapType["GiantWorldMap"] = "Giant World Map";
@@ -55,8 +49,14 @@ var GameMapType;
     GameMapType["Italia"] = "Italia";
     GameMapType["Yenisei"] = "Yenisei";
     GameMapType["Pluto"] = "Pluto";
-})(GameMapType || (exports.GameMapType = GameMapType = {}));
-exports.mapCategories = {
+    GameMapType["Australia_100x100"] = "australia_100x100";
+    GameMapType["Australia_100x100_nt"] = "australia_100x100_nt";
+    GameMapType["Australia_256x256"] = "australia_256x256";
+    GameMapType["Australia_500x500"] = "australia_500x500";
+    GameMapType["Australia_500x500_nt"] = "australia_500x500_nt";
+    GameMapType["Australia_1024x1024"] = "australia_1024x1024";
+})(GameMapType || (GameMapType = {}));
+export const mapCategories = {
     continental: [
         GameMapType.World,
         GameMapType.GiantWorldMap,
@@ -92,18 +92,18 @@ exports.mapCategories = {
         GameMapType.DeglaciatedAntarctica,
     ],
 };
-var GameType;
+export var GameType;
 (function (GameType) {
     GameType["Singleplayer"] = "Singleplayer";
     GameType["Public"] = "Public";
     GameType["Private"] = "Private";
-})(GameType || (exports.GameType = GameType = {}));
-var GameMode;
+})(GameType || (GameType = {}));
+export var GameMode;
 (function (GameMode) {
     GameMode["FFA"] = "Free For All";
     GameMode["Team"] = "Team";
-})(GameMode || (exports.GameMode = GameMode = {}));
-var UnitType;
+})(GameMode || (GameMode = {}));
+export var UnitType;
 (function (UnitType) {
     UnitType["TransportShip"] = "Transport";
     UnitType["Warship"] = "Warship";
@@ -122,12 +122,12 @@ var UnitType;
     UnitType["Construction"] = "Construction";
     UnitType["Train"] = "Train";
     UnitType["Factory"] = "Factory";
-})(UnitType || (exports.UnitType = UnitType = {}));
-var TrainType;
+})(UnitType || (UnitType = {}));
+export var TrainType;
 (function (TrainType) {
     TrainType["Engine"] = "Engine";
     TrainType["Carriage"] = "Carriage";
-})(TrainType || (exports.TrainType = TrainType = {}));
+})(TrainType || (TrainType = {}));
 const _structureTypes = new Set([
     UnitType.City,
     UnitType.Construction,
@@ -136,31 +136,30 @@ const _structureTypes = new Set([
     UnitType.MissileSilo,
     UnitType.Port,
 ]);
-function isStructureType(type) {
+export function isStructureType(type) {
     return _structureTypes.has(type);
 }
-exports.nukeTypes = [
+export const nukeTypes = [
     UnitType.AtomBomb,
     UnitType.HydrogenBomb,
     UnitType.MIRVWarhead,
     UnitType.MIRV,
 ];
-var Relation;
+export var Relation;
 (function (Relation) {
     Relation[Relation["Hostile"] = 0] = "Hostile";
     Relation[Relation["Distrustful"] = 1] = "Distrustful";
     Relation[Relation["Neutral"] = 2] = "Neutral";
     Relation[Relation["Friendly"] = 3] = "Friendly";
-})(Relation || (exports.Relation = Relation = {}));
-class Nation {
+})(Relation || (Relation = {}));
+export class Nation {
     constructor(spawnCell, strength, playerInfo) {
         this.spawnCell = spawnCell;
         this.strength = strength;
         this.playerInfo = playerInfo;
     }
 }
-exports.Nation = Nation;
-class Cell {
+export class Cell {
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -176,22 +175,21 @@ class Cell {
         return this.strRepr;
     }
 }
-exports.Cell = Cell;
-var TerrainType;
+export var TerrainType;
 (function (TerrainType) {
     TerrainType[TerrainType["Plains"] = 0] = "Plains";
     TerrainType[TerrainType["Highland"] = 1] = "Highland";
     TerrainType[TerrainType["Mountain"] = 2] = "Mountain";
     TerrainType[TerrainType["Lake"] = 3] = "Lake";
     TerrainType[TerrainType["Ocean"] = 4] = "Ocean";
-})(TerrainType || (exports.TerrainType = TerrainType = {}));
-var PlayerType;
+})(TerrainType || (TerrainType = {}));
+export var PlayerType;
 (function (PlayerType) {
     PlayerType["Bot"] = "BOT";
     PlayerType["Human"] = "HUMAN";
     PlayerType["FakeHuman"] = "FAKEHUMAN";
-})(PlayerType || (exports.PlayerType = PlayerType = {}));
-class PlayerInfo {
+})(PlayerType || (PlayerType = {}));
+export class PlayerInfo {
     constructor(name, playerType, 
     // null if bot.
     clientID, 
@@ -212,15 +210,14 @@ class PlayerInfo {
         }
     }
 }
-exports.PlayerInfo = PlayerInfo;
-function isUnit(unit) {
+export function isUnit(unit) {
     return (unit &&
         typeof unit === "object" &&
         "isUnit" in unit &&
         typeof unit.isUnit === "function" &&
         unit.isUnit());
 }
-var MessageType;
+export var MessageType;
 (function (MessageType) {
     MessageType[MessageType["ATTACK_FAILED"] = 0] = "ATTACK_FAILED";
     MessageType[MessageType["ATTACK_CANCELLED"] = 1] = "ATTACK_CANCELLED";
@@ -247,17 +244,17 @@ var MessageType;
     MessageType[MessageType["RECEIVED_TROOPS_FROM_PLAYER"] = 22] = "RECEIVED_TROOPS_FROM_PLAYER";
     MessageType[MessageType["CHAT"] = 23] = "CHAT";
     MessageType[MessageType["RENEW_ALLIANCE"] = 24] = "RENEW_ALLIANCE";
-})(MessageType || (exports.MessageType = MessageType = {}));
+})(MessageType || (MessageType = {}));
 // Message categories used for filtering events in the EventsDisplay
-var MessageCategory;
+export var MessageCategory;
 (function (MessageCategory) {
     MessageCategory["ATTACK"] = "ATTACK";
     MessageCategory["ALLIANCE"] = "ALLIANCE";
     MessageCategory["TRADE"] = "TRADE";
     MessageCategory["CHAT"] = "CHAT";
-})(MessageCategory || (exports.MessageCategory = MessageCategory = {}));
+})(MessageCategory || (MessageCategory = {}));
 // Ensures that all message types are included in a category
-exports.MESSAGE_TYPE_CATEGORIES = {
+export const MESSAGE_TYPE_CATEGORIES = {
     [MessageType.ATTACK_FAILED]: MessageCategory.ATTACK,
     [MessageType.ATTACK_CANCELLED]: MessageCategory.ATTACK,
     [MessageType.ATTACK_REQUEST]: MessageCategory.ATTACK,
@@ -287,6 +284,6 @@ exports.MESSAGE_TYPE_CATEGORIES = {
 /**
  * Get the category of a message type
  */
-function getMessageCategory(messageType) {
-    return exports.MESSAGE_TYPE_CATEGORIES[messageType];
+export function getMessageCategory(messageType) {
+    return MESSAGE_TYPE_CATEGORIES[messageType];
 }

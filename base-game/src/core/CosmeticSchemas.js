@@ -1,25 +1,22 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CosmeticsSchema = exports.PatternInfoSchema = exports.PatternSchema = exports.PatternNameSchema = exports.ProductSchema = void 0;
-const jose_1 = require("jose");
-const v4_1 = require("zod/v4");
-const PatternDecoder_1 = require("./PatternDecoder");
-exports.ProductSchema = v4_1.z.object({
-    productId: v4_1.z.string(),
-    priceId: v4_1.z.string(),
-    price: v4_1.z.string(),
+import { base64url } from "jose";
+import { z } from "zod/v4";
+import { PatternDecoder } from "./PatternDecoder";
+export const ProductSchema = z.object({
+    productId: z.string(),
+    priceId: z.string(),
+    price: z.string(),
 });
-exports.PatternNameSchema = v4_1.z
+export const PatternNameSchema = z
     .string()
     .regex(/^[a-z0-9_]+$/)
     .max(32);
-exports.PatternSchema = v4_1.z
+export const PatternSchema = z
     .string()
     .max(1403)
     .base64url()
     .refine((val) => {
     try {
-        new PatternDecoder_1.PatternDecoder(val, jose_1.base64url.decode);
+        new PatternDecoder(val, base64url.decode);
         return true;
     }
     catch (e) {
@@ -34,24 +31,24 @@ exports.PatternSchema = v4_1.z
 }, {
     message: "Invalid pattern",
 });
-exports.PatternInfoSchema = v4_1.z.object({
-    name: exports.PatternNameSchema,
-    pattern: exports.PatternSchema,
-    product: exports.ProductSchema.nullable(),
+export const PatternInfoSchema = z.object({
+    name: PatternNameSchema,
+    pattern: PatternSchema,
+    product: ProductSchema.nullable(),
 });
 // Schema for resources/cosmetics/cosmetics.json
-exports.CosmeticsSchema = v4_1.z.object({
-    patterns: v4_1.z.record(v4_1.z.string(), exports.PatternInfoSchema),
-    flag: v4_1.z
+export const CosmeticsSchema = z.object({
+    patterns: z.record(z.string(), PatternInfoSchema),
+    flag: z
         .object({
-        layers: v4_1.z.record(v4_1.z.string(), v4_1.z.object({
-            name: v4_1.z.string(),
-            flares: v4_1.z.array(v4_1.z.string()).optional(),
+        layers: z.record(z.string(), z.object({
+            name: z.string(),
+            flares: z.array(z.string()).optional(),
         })),
-        color: v4_1.z.record(v4_1.z.string(), v4_1.z.object({
-            color: v4_1.z.string(),
-            name: v4_1.z.string(),
-            flares: v4_1.z.array(v4_1.z.string()).optional(),
+        color: z.record(z.string(), z.object({
+            color: z.string(),
+            name: z.string(),
+            flares: z.array(z.string()).optional(),
         })),
     })
         .optional(),
