@@ -238,33 +238,51 @@ export class RLOverlay extends LitElement {
 
           <div class="section">
             <div class="section-title">Intensity Probs</div>
-            ${action.intensity_probs.slice(0, 5).map((prob, i) => html`
-              <div class="value-row">
-                <span class="value-label">${(i * 25)}%:</span>
-                <span class="value-data">${(prob * 100).toFixed(1)}%</span>
-              </div>
-              <div class="prob-bar">
-                <div class="prob-bar-fill" style="width: ${prob * 100}%"></div>
-              </div>
-            `)}
+            ${action.intensity_probs && Array.isArray(action.intensity_probs)
+              ? action.intensity_probs.slice(0, 5).map((prob, i) => html`
+                  <div class="value-row">
+                    <span class="value-label">${(i * 25)}%:</span>
+                    <span class="value-data">${(prob * 100).toFixed(1)}%</span>
+                  </div>
+                  <div class="prob-bar">
+                    <div class="prob-bar-fill" style="width: ${prob * 100}%"></div>
+                  </div>
+                `)
+              : html`<div class="value-row">Not available</div>`
+            }
           </div>
 
           <div class="section">
             <div class="value-row">
               <span class="value-label">Build Prob:</span>
-              <span class="value-data">${(action.build_prob * 100).toFixed(1)}%</span>
+              <span class="value-data">${action.build_prob != null ? (action.build_prob * 100).toFixed(1) + '%' : 'N/A'}</span>
             </div>
-            <div class="prob-bar">
-              <div class="prob-bar-fill" style="width: ${action.build_prob * 100}%"></div>
-            </div>
+            ${action.build_prob != null ? html`
+              <div class="prob-bar">
+                <div class="prob-bar-fill" style="width: ${action.build_prob * 100}%"></div>
+              </div>
+            ` : ''}
           </div>
         ` : ''}
       </div>
     `;
   }
 
-  private renderDirectionGrid(probs: number[], selectedDirection: string) {
+  private renderDirectionGrid(probs: number[] | undefined, selectedDirection: string) {
     const directions = ['NW', 'N', 'NE', 'W', 'IDLE', 'E', 'SW', 'S', 'SE'];
+
+    // If no probabilities provided, just show which direction is selected
+    if (!probs || !Array.isArray(probs)) {
+      return html`
+        <div class="direction-grid">
+          ${directions.map((dir) => html`
+            <div class="direction-cell ${dir === selectedDirection ? 'selected' : ''}">
+              ${dir}
+            </div>
+          `)}
+        </div>
+      `;
+    }
 
     return html`
       <div class="direction-grid">

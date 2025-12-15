@@ -1,0 +1,74 @@
+2025-12-02 12:54:17,001 - __main__ - WARNING - No GPU available - training will be slow!
+2025-12-02 12:54:17,002 - __main__ - WARNING - Consider using a GPU for training (15-25 hours vs 50-75 hours)
+2025-12-02 12:54:17,002 - __main__ - INFO - ================================================================================
+2025-12-02 12:54:17,002 - __main__ - INFO - PHASE 6 TRAINING - Cities Only (Simplified)
+2025-12-02 12:54:17,002 - __main__ - INFO - ================================================================================
+2025-12-02 12:54:17,002 - __main__ - INFO - Map: australia_256x256
+2025-12-02 12:54:17,002 - __main__ - INFO - Opponents: 10 bots
+2025-12-02 12:54:17,002 - __main__ - INFO - Parallel envs: 10
+2025-12-02 12:54:17,002 - __main__ - INFO - Total timesteps: 4,000,000
+2025-12-02 12:54:17,002 - __main__ - INFO - Action space: 5 × 10 × 5 × 10 = 2,500 actions (simplified from 38,500)
+2025-12-02 12:54:17,002 - __main__ - INFO - Observation space: 128×128×8 channels + 16 global features
+2025-12-02 12:54:17,002 - __main__ - INFO - Features: Cities only, Territory control, Action masking
+2025-12-02 12:54:17,002 - __main__ - INFO - ================================================================================
+2025-12-02 12:54:17,002 - __main__ - INFO - Model directory: models/ppo_cities_20251202_125417
+2025-12-02 12:54:17,002 - __main__ - INFO - Log directory: logs/ppo_cities_20251202_125417
+2025-12-02 12:54:17,002 - __main__ - INFO - Creating 10 parallel training environment(s)...
+2025-12-02 12:54:17,002 - game_wrapper - INFO - Starting game bridge: /Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/game_bridge/game_bridge.ts
+2025-12-02 12:54:17,515 - game_wrapper - INFO - Game bridge process started
+2025-12-02 12:54:17,515 - game_wrapper - INFO - GameWrapper initialized: map=australia_256x256, players=11
+2025-12-02 12:54:17,515 - environment_cities - INFO - Created GameWrapper: map=australia_256x256, bots=10
+2025-12-02 12:54:17,517 - environment_cities - INFO - Cities-only environment initialized: map=australia_256x256, bots=10
+2025-12-02 12:54:17,517 - environment_cities - INFO - Action space size: 2,500 total actions (simplified from 38,500)
+2025-12-02 12:54:17,517 - game_wrapper - INFO - Starting game bridge: /Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/game_bridge/game_bridge.ts
+2025-12-02 12:54:18,022 - game_wrapper - INFO - Game bridge process started
+2025-12-02 12:54:18,022 - game_wrapper - INFO - GameWrapper initialized: map=australia_256x256, players=11
+2025-12-02 12:54:18,022 - environment_cities - INFO - Created GameWrapper: map=australia_256x256, bots=10
+2025-12-02 12:54:18,024 - environment_cities - INFO - Cities-only environment initialized: map=australia_256x256, bots=10
+2025-12-02 12:54:18,024 - environment_cities - INFO - Action space size: 2,500 total actions (simplified from 38,500)
+2025-12-02 12:54:18,025 - game_wrapper - INFO - Starting game bridge: /Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/game_bridge/game_bridge.ts
+Traceback (most recent call last):
+  File "/Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/train_cities.py", line 309, in <module>
+    train_cities(
+    ~~~~~~~~~~~~^
+        map_name=args.map,
+        ^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        max_grad_norm=args.max_grad_norm
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/train_cities.py", line 138, in train_cities
+    env = DummyVecEnv([make_env(map_name, num_bots) for _ in range(n_envs)])
+  File "/Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/.phase6env/lib/python3.13/site-packages/stable_baselines3/common/vec_env/dummy_vec_env.py", line 31, in __init__
+    self.envs = [_patch_env(fn()) for fn in env_fns]
+                            ~~^^
+  File "/Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/train_cities.py", line 58, in _init
+    env = OpenFrontEnvCities(
+        map_name=map_name,
+        num_bots=num_bots,
+        frame_stack=4
+    )
+  File "/Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/src/environment_cities.py", line 67, in __init__
+    self.game = GameWrapper(
+                ~~~~~~~~~~~^
+        map_name=map_name,
+        ^^^^^^^^^^^^^^^^^^
+        num_players=num_bots + 1  # +1 for RL agent
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/src/game_wrapper.py", line 161, in __init__
+    self._start_bridge()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/Users/alexis/Dev/Lehigh/projects/openfrontio-rl/phase6-implementation/src/game_wrapper.py", line 209, in _start_bridge
+    raise RuntimeError(f"Game bridge failed to start: {stderr}")
+RuntimeError: Game bridge failed to start: 
+2025-12-02 12:54:18,537 - game_wrapper - INFO - Closing game bridge
+2025-12-02 12:54:19,161 - game_wrapper - INFO - Game wrapper closed
+2025-12-02 12:54:19,161 - game_wrapper - INFO - Closing game bridge
+2025-12-02 12:54:19,161 - game_wrapper - INFO - Game wrapper closed
+2025-12-02 12:54:19,165 - game_wrapper - INFO - Game wrapper closed
+2025-12-02 12:54:19,165 - game_wrapper - INFO - Game wrapper closed
+2025-12-02 12:54:19,191 - game_wrapper - INFO - Closing game bridge
+2025-12-02 12:54:19,191 - game_wrapper - INFO - Game wrapper closed

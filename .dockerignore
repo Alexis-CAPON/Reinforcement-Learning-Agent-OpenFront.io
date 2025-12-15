@@ -1,0 +1,36 @@
+# Node modules (will be rebuilt in container)
+**/node_modules
+
+# Python cache
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+
+# Training outputs (mount as volumes instead)
+**/models
+**/logs
+**/runs
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large generated maps (mount if needed)
+**/map-generator/generated
+
+# Temporary files
+**/*.log
+**/tmp

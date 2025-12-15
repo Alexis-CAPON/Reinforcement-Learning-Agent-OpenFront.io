@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 6 Cities Visualizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            background-color: #0a0a0a;
+            color: #00ff00;
+        }
+
+        #container {
+            display: flex;
+            gap: 20px;
+        }
+
+        #canvas-container {
+            flex: 1;
+            border: 2px solid #00ff00;
+            background-color: #000;
+            position: relative;
+        }
+
+        #info-panel {
+            width: 300px;
+            border: 2px solid #00ff00;
+            padding: 15px;
+            background-color: #000;
+        }
+
+        #status {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #00ff00;
+        }
+
+        .status-connected {
+            color: #00ff00;
+        }
+
+        .status-disconnected {
+            color: #ff0000;
+        }
+
+        #metrics {
+            margin-top: 20px;
+        }
+
+        .metric {
+            margin: 10px 0;
+            padding: 5px;
+            border-left: 3px solid #00ff00;
+            padding-left: 10px;
+        }
+
+        .metric-label {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .metric-value {
+            color: #00ff00;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #controls {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #00ff00;
+        }
+
+        button {
+            background-color: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+
+        button:hover {
+            background-color: #00ff00;
+            color: #000;
+        }
+
+        button:disabled {
+            color: #444;
+            border-color: #444;
+            cursor: not-allowed;
+        }
+
+        button:disabled:hover {
+            background-color: #000;
+            color: #444;
+        }
+
+        h2 {
+            color: #00ff00;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 5px;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #action-info {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #00ff00;
+            font-size: 12px;
+        }
+
+        .action-label {
+            color: #888;
+        }
+
+        .action-value {
+            color: #00ff00;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏙️ Phase 6 Cities Visualizer</h1>
+
+    <div id="container">
+        <div id="canvas-container">
+            <canvas id="game-canvas"></canvas>
+        </div>
+
+        <div id="info-panel">
+            <div id="status">
+                <div class="status-disconnected" id="status-text">Connecting...</div>
+            </div>
+
+            <div id="controls">
+                <h2>Controls</h2>
+                <button id="btn-play" disabled>▶ Play</button>
+                <button id="btn-pause" disabled>⏸ Pause</button>
+                <br>
+                <button id="btn-speed-slow" disabled>0.5x</button>
+                <button id="btn-speed-normal" disabled>1x</button>
+                <button id="btn-speed-fast" disabled>2x</button>
+            </div>
+
+            <div id="metrics">
+                <h2>Game State</h2>
+
+                <div class="metric">
+                    <div class="metric-label">Step</div>
+                    <div class="metric-value" id="metric-step">0</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Territory</div>
+                    <div class="metric-value" id="metric-territory">0%</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Cities</div>
+                    <div class="metric-value" id="metric-cities">0</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Gold</div>
+                    <div class="metric-value" id="metric-gold">0</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Rank</div>
+                    <div class="metric-value" id="metric-rank">-/-</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Cumulative Reward</div>
+                    <div class="metric-value" id="metric-reward">0.0</div>
+                </div>
+            </div>
+
+            <div id="action-info">
+                <h2>Last Action</h2>
+                <div>
+                    <span class="action-label">Direction:</span>
+                    <span class="action-value" id="action-direction">-</span>
+                </div>
+                <div>
+                    <span class="action-label">Intensity:</span>
+                    <span class="action-value" id="action-intensity">-</span>
+                </div>
+                <div>
+                    <span class="action-label">Cluster:</span>
+                    <span class="action-value" id="action-cluster">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        let isConnected = false;
+
+        // Canvas setup
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const TILE_SIZE = 4;  // pixels per tile
+        const MAP_SIZE = 128;  // tiles (downsampled from 512)
+        canvas.width = MAP_SIZE * TILE_SIZE;
+        canvas.height = MAP_SIZE * TILE_SIZE;
+
+        // Direction names
+        const DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'WAIT'];
+
+        // Player colors (matching server)
+        const PLAYER_COLORS = {
+            1: '#00ff00',  // RL Agent - Green
+            2: '#ff0000',
+            3: '#0000ff',
+            4: '#ffff00',
+            5: '#ff00ff',
+            6: '#00ffff',
+            7: '#ff8800',
+            8: '#8800ff',
+            9: '#00ff88',
+            10: '#ff0088',
+            11: '#88ff00'
+        };
+
+        // Connect to WebSocket server
+        function connect() {
+            const wsUrl = 'ws://localhost:8765';
+            console.log('Connecting to:', wsUrl);
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('Connected to server');
+                isConnected = true;
+                updateConnectionStatus(true);
+                enableControls(true);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleMessage(data);
+                } catch (error) {
+                    console.error('Failed to parse message:', error);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected from server');
+                isConnected = false;
+                updateConnectionStatus(false);
+                enableControls(false);
+
+                // Try to reconnect after 2 seconds
+                setTimeout(connect, 2000);
+            };
+        }
+
+        // Handle incoming messages
+        function handleMessage(data) {
+            if (data.type === 'game_state') {
+                updateGameState(data);
+            } else if (data.type === 'model_state') {
+                updateModelState(data);
+            }
+        }
+
+        // Update game state visualization
+        function updateGameState(data) {
+            const visualState = data.visual_state;
+
+            // Clear canvas
+            ctx.fillStyle = '#1a1a1a';  // Neutral territory color
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw tiles
+            if (visualState.tiles) {
+                for (const tile of visualState.tiles) {
+                    const color = PLAYER_COLORS[tile.owner_id] || '#ffffff';
+
+                    // Draw tile
+                    ctx.fillStyle = color;
+                    ctx.fillRect(
+                        tile.x * TILE_SIZE,
+                        tile.y * TILE_SIZE,
+                        TILE_SIZE,
+                        TILE_SIZE
+                    );
+
+                    // Draw city marker (white center)
+                    if (tile.is_city) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(
+                            tile.x * TILE_SIZE + 1,
+                            tile.y * TILE_SIZE + 1,
+                            TILE_SIZE - 2,
+                            TILE_SIZE - 2
+                        );
+                    }
+                }
+            }
+
+            // Update metrics
+            if (visualState.rl_player) {
+                const player = visualState.rl_player;
+                document.getElementById('metric-step').textContent = data.tick;
+                document.getElementById('metric-territory').textContent =
+                    (player.territory_pct * 100).toFixed(1) + '%';
+                document.getElementById('metric-cities').textContent = player.cities_count;
+                document.getElementById('metric-gold').textContent = player.gold.toLocaleString();
+                document.getElementById('metric-rank').textContent =
+                    player.rank + '/' + (visualState.players ? visualState.players.length : '?');
+            }
+        }
+
+        // Update model state (action info, reward)
+        function updateModelState(data) {
+            // Update reward
+            document.getElementById('metric-reward').textContent =
+                data.cumulative_reward.toFixed(1);
+
+            // Update action info
+            if (data.action) {
+                const action = data.action;
+                document.getElementById('action-direction').textContent =
+                    DIRECTIONS[action.direction] || action.direction;
+                document.getElementById('action-intensity').textContent =
+                    (action.intensity * 100).toFixed(0) + '%';
+                document.getElementById('action-cluster').textContent = action.cluster_id;
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const statusText = document.getElementById('status-text');
+            if (connected) {
+                statusText.textContent = '🟢 Connected';
+                statusText.className = 'status-connected';
+            } else {
+                statusText.textContent = '🔴 Disconnected';
+                statusText.className = 'status-disconnected';
+            }
+        }
+
+        // Enable/disable controls
+        function enableControls(enabled) {
+            document.getElementById('btn-play').disabled = !enabled;
+            document.getElementById('btn-pause').disabled = !enabled;
+            document.getElementById('btn-speed-slow').disabled = !enabled;
+            document.getElementById('btn-speed-normal').disabled = !enabled;
+            document.getElementById('btn-speed-fast').disabled = !enabled;
+        }
+
+        // Send control command
+        function sendControl(command, data = {}) {
+            if (ws && isConnected) {
+                ws.send(JSON.stringify({
+                    type: 'control',
+                    command: command,
+                    ...data
+                }));
+            }
+        }
+
+        // Control button handlers
+        document.getElementById('btn-play').addEventListener('click', () => {
+            sendControl('play');
+        });
+
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            sendControl('pause');
+        });
+
+        document.getElementById('btn-speed-slow').addEventListener('click', () => {
+            sendControl('speed', { speed: 0.5 });
+        });
+
+        document.getElementById('btn-speed-normal').addEventListener('click', () => {
+            sendControl('speed', { speed: 1.0 });
+        });
+
+        document.getElementById('btn-speed-fast').addEventListener('click', () => {
+            sendControl('speed', { speed: 2.0 });
+        });
+
+        // Connect on page load
+        connect();
+    </script>
+</body>
+</html>
